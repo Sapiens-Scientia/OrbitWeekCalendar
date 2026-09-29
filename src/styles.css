@@ -34,6 +34,8 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; pa
 .day-cell.active-week { stroke: #526e5c; stroke-width: 1.1; }
 .day-cell:focus-visible { outline: none; stroke: #1b3027; stroke-width: 2.5; }
 .day-cell.outside { stroke: #cbd0c4; }
+.orbit-week-number { font: 8.5px 'DM Sans', sans-serif; font-variant-numeric: tabular-nums; text-anchor: middle; fill: #728174; }
+.orbit-week-number.is-selected { fill: #35594d; font-weight: 600; }
 .season-date-circle { fill: none; stroke: #a27330; stroke-width: 1.5; pointer-events: none; }
 .season-date-circle.is-selected { stroke: #efd39a; }
 .season-marker { cursor: pointer; outline: none; }

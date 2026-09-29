@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { addDays, arcCell, dateKey, dayOfYear, FILLS, formatDate, point, startOfWeek } from '../calendar.js';
+import { addDays, arcCell, dateKey, dayOfYear, FILLS, formatDate, isoWeek, point, startOfWeek } from '../calendar.js';
 import { Sun } from './Icons.jsx';
 
 const INNER = 175;
@@ -59,7 +59,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
     <div className={`orbit-viewport${zoomed ? ' is-zoomed' : ''}`}>
     <svg className="calendar" viewBox="0 0 900 900" aria-labelledby="calendar-title calendar-description">
       <title id="calendar-title">{calendar.year} orbital calendar</title>
-      <desc id="calendar-description">Seven rings: Monday outermost to Sunday innermost. Each spoke is one week. Select a date to explore. Arrow left and right move one week; up and down move one day.</desc>
+      <desc id="calendar-description">Seven rings: Monday outermost to Sunday innermost. Each spoke is one week, with its ISO week number just inside the inner ring. Select a date to explore. Arrow left and right move one week; up and down move one day.</desc>
       {calendar.weeks.flat().map(({ date, key, track, week, inYear }) => {
         const start = week * step, end = start + step;
         const radialTrack = 6 - track; // Monday outside, Sunday nearest the Sun.
@@ -98,13 +98,23 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
           <text x={x} y={y} dy=".35em">{formatDate(first.date, { month: 'long' }).toUpperCase()}</text>
         </g>;
       })}
+      {calendar.weeks.map((week, index) => {
+        const [x, y] = point(INNER - 11, (index + .5) * step);
+        const number = isoWeek(week[0].date);
+        return <text key={week[0].key} x={x} y={y} dy=".35em"
+          className={`orbit-week-number${+week[0].date === selectedWeek ? ' is-selected' : ''}`}
+          aria-label={`Week ${number}`}>
+          <title>Week {number}: {formatDate(week[0].date, { month: 'short', day: 'numeric', year: 'numeric' })} – {formatDate(week[6].date, { month: 'short', day: 'numeric', year: 'numeric' })}</title>
+          {number}
+        </text>;
+      })}
       {seasons.map(season => {
         const cell = calendar.weeks.flat().find(day => day.key === season.key);
         if (!cell) return null;
         const angle = (cell.week + .5) * step;
-        const [x, y] = point(142, angle);
-        const [tickX, tickY] = point(162, angle);
-        const [edgeX, edgeY] = point(173, angle);
+        const [x, y] = point(130, angle);
+        const [tickX, tickY] = point(149, angle);
+        const [edgeX, edgeY] = point(154, angle);
         return <g key={season.id} className="season-marker" role="button" tabIndex={0}
           aria-label={`${season.name}, ${formatDate(season.date, { month: 'long', day: 'numeric' })}, ${season.timeLabel}`}
           onClick={() => onSelect(season.date)}
