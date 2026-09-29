@@ -1,0 +1,11 @@
+export function Chevron({ direction = 'right' }) {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d={direction === 'left' ? 'm14 6-6 6 6 6' : 'm10 6 6 6-6 6'} stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+
+export function OrbitMark() {
+  return <svg className="orbit-mark" width="42" height="42" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle cx="22" cy="23" r="17" stroke="currentColor" /><circle cx="22" cy="23" r="5.5" fill="#e6ce94" stroke="currentColor" strokeWidth=".6" /><circle cx="35" cy="12" r="4.5" fill="currentColor" /></svg>;
+}
+
+export function Sun() {
+  return <g className="sun" aria-hidden="true"><circle cx="450" cy="382" r="17" fill="#cfa45e" />{Array.from({ length: 12 }, (_, i) => <line key={i} x1="450" y1="351" x2="450" y2="358" transform={`rotate(${i * 30} 450 382)`} stroke="#cfa45e" strokeWidth="1.7" />)}</g>;
+}
