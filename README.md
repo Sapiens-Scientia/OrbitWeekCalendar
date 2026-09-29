@@ -2,6 +2,8 @@
 
 An interactive annual calendar inspired by Earth's orbit around the Sun.
 
+[Open Orbit](https://orbit-week-calendar.vercel.app)
+
 - Each angular spoke is a Monday–Sunday week.
 - Exactly seven tracks run from **Monday on the outside** to **Sunday on the inside**.
 - The year moves clockwise from January at the top, with month labels around the rim.
@@ -10,6 +12,12 @@ An interactive annual calendar inspired by Earth's orbit around the Sun.
 - On small screens, use Enlarge dates to explore a larger, scrollable orbit, or select dates from the week list below.
 - Equinoxes and solstices are marked with ochre circles around their date numbers and labeled inside the orbit. Select a marker to see its approximate local time. Dates are recalculated for each year using [Astronomy Engine](https://github.com/cosinekitty/astronomy), in your browser's time zone; month-based names apply in either hemisphere.
 - Leap years and partial weeks are supported. Adjacent-year dates are blank on the wheel and selectable from the week list.
+
+## Deployment
+
+Vercel project `orbit-week-calendar` is connected to `Sapiens-Scientia/OrbitWeekCalendar`. Pushes to `main` automatically build and deploy to production at https://orbit-week-calendar.vercel.app. Other branches receive preview deployments through Vercel's GitHub integration.
+
+Build settings: Vite, repository root, `npm run build`, output directory `dist`.
 
 ## Run
 
