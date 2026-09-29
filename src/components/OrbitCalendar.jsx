@@ -58,7 +58,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
   return <div className="orbit-stage">
     <label className="fade-past-control"><input type="checkbox" checked={fadePast} onChange={event => setFadePast(event.target.checked)} /> Fade past days</label>
     <div className={`orbit-viewport${zoomed ? ' is-zoomed' : ''}`}>
-    <svg className="calendar" viewBox="0 0 900 900" aria-labelledby="calendar-title calendar-description">
+    <svg className="calendar" viewBox="-55 -10 1010 920" aria-labelledby="calendar-title calendar-description">
       <title id="calendar-title">{calendar.year} orbital calendar</title>
       <desc id="calendar-description">Seven rings: Monday outermost to Sunday innermost. Each spoke is one week, with its ISO week number just inside the inner ring. Select a date to explore. Arrow left and right move one week; up and down move one day.</desc>
       {calendar.weeks.flat().map(({ date, key, track, week, inYear }) => {
@@ -92,11 +92,13 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         const first = cells[0], last = cells.at(-1);
         const a = (first.week + first.track / 7) * step;
         const b = (last.week + (last.track + 1) / 7) * step;
-        const [x, y] = point(426, (a + b) / 2);
+        const angle = (a + b) / 2;
+        const side = Math.sin(angle);
+        const [x, y] = point(415, angle);
+        const anchor = side < -.4 ? 'end' : side > .4 ? 'start' : 'middle';
         return <g key={month} className="month-marker" aria-hidden="true">
           <path className="month-outline" d={monthOutline(calendar.weeks, month, step)} />
-          <path d={`M ${point(395, a + .007)} A 395 395 0 0 1 ${point(395, b - .007)}`} fill="none" stroke="#607468" strokeWidth="1" />
-          <text x={x} y={y} dy=".35em">{formatDate(first.date, { month: 'long' }).toUpperCase()}</text>
+          <text x={x} y={y} dy=".35em" style={{ textAnchor: anchor }}>{formatDate(first.date, { month: 'long' }).toUpperCase()}</text>
         </g>;
       })}
       {calendar.weeks.map((week, index) => {

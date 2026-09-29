@@ -140,7 +140,7 @@ footer { display: flex; justify-content: space-between; border-top: 1px solid va
 
 /* Let the orbit use the full canvas now that date details live at its center. */
 main { display: flex; justify-content: center; padding: 12px 0 18px; }
-.orbit-stage { width: min(100%, calc(100svh - 145px)); margin-inline: auto; }
+.orbit-stage { width: min(100%, calc(109.78svh - 159px)); margin-inline: auto; }
 .calendar { max-height: none; }
 .center-caption { font-style: normal; font-size: 18px; }
 @media (max-width: 800px) { .orbit-stage { width: 100%; } }
