@@ -19,6 +19,8 @@ Vercel project `orbit-week-calendar` is connected to `Sapiens-Scientia/OrbitWeek
 
 Build settings: Vite, repository root, `npm run build`, output directory `dist`.
 
+For this private repository on Vercel's Hobby plan, commits must be authored by the GitHub account connected to the Vercel owner (`Sapiens-Scientia`). Commits attributed to another account can trigger a deployment but will be blocked by Vercel's contributor check.
+
 ## Run
 
 ```sh
