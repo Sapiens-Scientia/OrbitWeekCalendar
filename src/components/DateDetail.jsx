@@ -19,7 +19,7 @@ export default function DateDetail({ selected, seasons, onSelect }) {
     </section>
     <section className="reading-section">
       <h2>Reading the orbit</h2>
-      <p>Each spoke is a week. Move inward from Monday to Sunday, and clockwise through the year.</p>
+      <p>Each spoke is a week. Move inward from Monday to Sunday, and clockwise through the year. Parchment tracks are weekdays; ochre tracks are weekends.</p>
       <div className="track-legend">{WEEKDAYS.map((day, i) => <div key={day} title={`${day}: track ${i + 1}`}><span className="color-dot" style={{ background: COLORS[i] }} /><span>{day[0]}</span></div>)}</div>
       <div className="track-direction"><span>Outer</span><svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path d="M0 6H198m-5-5 5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1" /></svg><span>Inner</span></div>
     </section>

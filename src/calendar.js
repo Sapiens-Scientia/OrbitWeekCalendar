@@ -1,8 +1,8 @@
 // UTC civil dates keep calendar arithmetic independent of daylight saving changes.
 export const DAY = 86_400_000;
 export const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-export const COLORS = ['#35594d', '#8eaa88', '#bdc9a5', '#dfbf6c', '#ca9854', '#c58972', '#d4a18e'];
-export const FILLS = ['#d4dfd8', '#dce5d5', '#e6e9d4', '#efe4c1', '#ebd7b4', '#e9cdbf', '#edd4c9'];
+export const COLORS = ['#e5ddca', '#e5ddca', '#e5ddca', '#e5ddca', '#e5ddca', '#dfbf6c', '#dfbf6c'];
+export const FILLS = ['#f1ecdf', '#f1ecdf', '#f1ecdf', '#f1ecdf', '#f1ecdf', '#efe4c1', '#efe4c1'];
 export const civilDate = (year, month, day) => new Date(Date.UTC(year, month, day));
 export const dateKey = (date) => date.toISOString().slice(0, 10);
 export const weekday = (date) => (date.getUTCDay() + 6) % 7;

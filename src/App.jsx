@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { calendarYear, changeYear, localToday } from './calendar.js';
 import { seasonEvents } from './seasons.js';
 import OrbitCalendar from './components/OrbitCalendar.jsx';
-import DateDetail from './components/DateDetail.jsx';
 import { Chevron, OrbitMark } from './components/Icons.jsx';
 
 export default function App() {
@@ -21,7 +20,6 @@ export default function App() {
         <button className="today-button" onClick={() => setSelected(localToday())}>Today</button>
       </nav>
     </header>
-    <main><OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} /><DateDetail selected={selected} seasons={seasons} onSelect={setSelected} /></main>
-    <footer><span>{calendar.dayCount} days. {calendar.weekCount} weeks. One orbit.</span><span>An earthly perspective on time.</span></footer>
+    <main><OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} /></main>
   </div>;
 }

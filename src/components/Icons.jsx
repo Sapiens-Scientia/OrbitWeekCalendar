@@ -3,7 +3,7 @@ export function Chevron({ direction = 'right' }) {
 }
 
 export function OrbitMark() {
-  return <svg className="orbit-mark" width="42" height="42" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle cx="22" cy="23" r="17" stroke="currentColor" /><circle cx="22" cy="23" r="5.5" fill="#e6ce94" stroke="currentColor" strokeWidth=".6" /><circle cx="35" cy="12" r="4.5" fill="currentColor" /></svg>;
+  return <img className="orbit-mark" width="42" height="42" src="/icon.svg" alt="" aria-hidden="true" />;
 }
 
 export function Sun() {

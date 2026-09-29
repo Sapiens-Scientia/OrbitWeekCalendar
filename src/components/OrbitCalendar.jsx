@@ -39,11 +39,11 @@ function monthOutline(weeks, month, step) {
 export default function OrbitCalendar({ calendar, seasons, selected, today, onSelect }) {
   const cellRefs = useRef(new Map());
   const [zoomed, setZoomed] = useState(false);
+  const [fadePast, setFadePast] = useState(false);
   const selectedKey = dateKey(selected);
   const todayKey = dateKey(today);
   const selectedWeek = +startOfWeek(selected);
   const step = TAU / calendar.weekCount;
-  const progress = dayOfYear(selected) / calendar.dayCount;
 
   function navigate(event, date) {
     const offsets = { ArrowRight: 7, ArrowLeft: -7, ArrowUp: -1, ArrowDown: 1, Home: -((date.getUTCDay() + 6) % 7), End: 6 - ((date.getUTCDay() + 6) % 7) };
@@ -56,6 +56,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
   }
 
   return <div className="orbit-stage">
+    <label className="fade-past-control"><input type="checkbox" checked={fadePast} onChange={event => setFadePast(event.target.checked)} /> Fade past days</label>
     <div className={`orbit-viewport${zoomed ? ' is-zoomed' : ''}`}>
     <svg className="calendar" viewBox="0 0 900 900" aria-labelledby="calendar-title calendar-description">
       <title id="calendar-title">{calendar.year} orbital calendar</title>
@@ -68,7 +69,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         const isToday = key === todayKey;
         const season = seasons.find(event => event.key === key);
         const isWeek = +startOfWeek(date) === selectedWeek;
-        return <g key={key}>
+        return <g key={key} className={fadePast && inYear && date < today && !isSelected ? 'past-day' : undefined}>
           <path
             ref={node => { if (node) cellRefs.current.set(key, node); else cellRefs.current.delete(key); }}
             d={arcCell(INNER + radialTrack * TRACK, INNER + (radialTrack + 1) * TRACK, start, end)}
@@ -128,10 +129,10 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       })}
       <Sun />
       <text x="450" y="475" className="center-year">{calendar.year}</text>
-      <text x="450" y="507" className="center-caption">One trip around the Sun</text>
-      <line x1="354" y1="534" x2="546" y2="534" stroke="#dce0d5" strokeWidth="4" strokeLinecap="round" />
-      <line x1="354" y1="534" x2={354 + 192 * progress} y2="534" stroke="#35594d" strokeWidth="4" strokeLinecap="round" />
-      <text x="450" y="558" className="center-progress">{Math.round(progress * 100)}% of the year</text>
+      <g aria-live="polite" aria-atomic="true">
+        <text x="450" y="507" className="center-caption">{formatDate(selected, { weekday: 'long', month: 'long', day: 'numeric' })}</text>
+        <text x="450" y="533" className="center-progress">Day {dayOfYear(selected)} of {calendar.dayCount} · Week {isoWeek(selected)}</text>
+      </g>
     </svg>
     </div>
     <button className="orbit-zoom-button" aria-pressed={zoomed} onClick={() => setZoomed(value => !value)}>{zoomed ? 'Show full orbit' : 'Enlarge dates'}</button>

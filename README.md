@@ -7,6 +7,7 @@ An interactive annual calendar inspired by Earth's orbit around the Sun.
 - Each angular spoke is a Monday–Sunday week.
 - ISO week numbers sit just inside the innermost ring, aligned with their spokes; the selected week is emphasized.
 - Exactly seven tracks run from **Monday on the outside** to **Sunday on the inside**.
+- Weekdays share one pale parchment color; weekends share one soft ochre color.
 - The year moves clockwise from January at the top, with month labels around the rim.
 - Select a date to see its week. Use the year arrows or Today to navigate.
 - Focus the selected date and use left/right arrows to move by a week; up/down arrows move by a day. Home/End move to Monday/Sunday within the displayed year.
