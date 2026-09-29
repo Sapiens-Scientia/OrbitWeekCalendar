@@ -6,7 +6,37 @@ const INNER = 175;
 const TRACK = 30;
 const TAU = Math.PI * 2;
 
-export default function OrbitCalendar({ calendar, selected, today, onSelect }) {
+function monthOutline(weeks, month, step) {
+  const belongsToMonth = cell => cell?.inYear && cell.date.getUTCMonth() === month;
+  const edges = [];
+
+  for (const cell of weeks.flat()) {
+    if (!belongsToMonth(cell)) continue;
+    const { week, track } = cell;
+    const inner = INNER + (6 - track) * TRACK;
+    const outer = inner + TRACK;
+    const start = week * step;
+    const end = start + step;
+
+    // Only draw exposed edges, so a month has one stepped outline across its tracks.
+    if (!belongsToMonth(weeks[week][track - 1])) {
+      edges.push(`M ${point(outer, start)} A ${outer} ${outer} 0 0 1 ${point(outer, end)}`);
+    }
+    if (!belongsToMonth(weeks[week][track + 1])) {
+      edges.push(`M ${point(inner, start)} A ${inner} ${inner} 0 0 1 ${point(inner, end)}`);
+    }
+    if (!belongsToMonth(weeks[week - 1]?.[track])) {
+      edges.push(`M ${point(inner, start)} L ${point(outer, start)}`);
+    }
+    if (!belongsToMonth(weeks[week + 1]?.[track])) {
+      edges.push(`M ${point(inner, end)} L ${point(outer, end)}`);
+    }
+  }
+
+  return edges.join(' ');
+}
+
+export default function OrbitCalendar({ calendar, seasons, selected, today, onSelect }) {
   const cellRefs = useRef(new Map());
   const [zoomed, setZoomed] = useState(false);
   const selectedKey = dateKey(selected);
@@ -36,6 +66,7 @@ export default function OrbitCalendar({ calendar, selected, today, onSelect }) {
         const [x, y] = point(INNER + TRACK * (radialTrack + .5), start + step / 2);
         const isSelected = key === selectedKey;
         const isToday = key === todayKey;
+        const season = seasons.find(event => event.key === key);
         const isWeek = +startOfWeek(date) === selectedWeek;
         return <g key={key}>
           <path
@@ -45,11 +76,12 @@ export default function OrbitCalendar({ calendar, selected, today, onSelect }) {
             className={`day-cell${isSelected ? ' selected' : ''}${isWeek && inYear ? ' active-week' : ''}${!inYear ? ' outside' : ''}`}
             role={inYear ? 'button' : undefined}
             tabIndex={inYear && isSelected ? 0 : -1}
-            aria-label={inYear ? `${formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}${isToday ? ', today' : ''}` : undefined}
+            aria-label={inYear ? `${formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}${isToday ? ', today' : ''}${season ? `, ${season.name}` : ''}` : undefined}
             aria-pressed={inYear ? isSelected : undefined}
             onClick={inYear ? () => onSelect(date) : undefined}
             onKeyDown={inYear ? event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(date); } else navigate(event, date); } : undefined}
-          ><title>{formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</title></path>
+          ><title>{formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}{season ? ` · ${season.name} · ${season.timeLabel}` : ''}</title></path>
+          {season && inYear && <circle cx={x} cy={y} r="9" className={`season-date-circle${isSelected ? ' is-selected' : ''}`} aria-hidden="true" />}
           {inYear && <text x={x} y={y} dy=".35em" className={`day-number${isSelected ? ' selected-number' : ''}`} aria-hidden="true">{date.getUTCDate()}</text>}
           {isToday && inYear && <circle cx={x} cy={y + 8} r="1.5" fill={isSelected ? '#fff' : '#35594d'} pointerEvents="none" />}
         </g>;
@@ -61,8 +93,27 @@ export default function OrbitCalendar({ calendar, selected, today, onSelect }) {
         const b = (last.week + (last.track + 1) / 7) * step;
         const [x, y] = point(426, (a + b) / 2);
         return <g key={month} className="month-marker" aria-hidden="true">
-          <path d={`M ${point(395, a + .007)} A 395 395 0 0 1 ${point(395, b - .007)}`} fill="none" stroke="#9ca69a" strokeWidth="1" />
+          <path className="month-outline" d={monthOutline(calendar.weeks, month, step)} />
+          <path d={`M ${point(395, a + .007)} A 395 395 0 0 1 ${point(395, b - .007)}`} fill="none" stroke="#607468" strokeWidth="1" />
           <text x={x} y={y} dy=".35em">{formatDate(first.date, { month: 'long' }).toUpperCase()}</text>
+        </g>;
+      })}
+      {seasons.map(season => {
+        const cell = calendar.weeks.flat().find(day => day.key === season.key);
+        if (!cell) return null;
+        const angle = (cell.week + .5) * step;
+        const [x, y] = point(142, angle);
+        const [tickX, tickY] = point(162, angle);
+        const [edgeX, edgeY] = point(173, angle);
+        return <g key={season.id} className="season-marker" role="button" tabIndex={0}
+          aria-label={`${season.name}, ${formatDate(season.date, { month: 'long', day: 'numeric' })}, ${season.timeLabel}`}
+          onClick={() => onSelect(season.date)}
+          onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(season.date); } }}>
+          <title>{season.name} · {season.timeLabel} · {season.timeZone}</title>
+          <circle className="season-hit-area" cx={x} cy={y} r="28" />
+          <line x1={tickX} y1={tickY} x2={edgeX} y2={edgeY} />
+          <text x={x} y={y - 4} className="season-date">{formatDate(season.date, { month: 'short', day: 'numeric' }).toUpperCase()}</text>
+          <text x={x} y={y + 10} className="season-kind">{season.kind.toUpperCase()}</text>
         </g>;
       })}
       <Sun />

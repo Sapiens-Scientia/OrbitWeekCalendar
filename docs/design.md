@@ -7,6 +7,8 @@ Reference: `orbit-concept.png`, generated with the built-in image generation too
 - Warm paper background `#f6f4ed`, forest ink `#293b36`, rules `#bdc4b8`.
 - Display typography: Libre Caslon Display, with Georgia fallback. UI and date numerals: DM Sans, with sans-serif fallback.
 - Seven track colors progress from forest/sage on Monday through straw/ochre to clay on Sunday.
+- Each month's cells have a darker forest outline, following the stepped boundaries where months change partway through a week.
+- Four ochre labels inside the orbit identify March/September equinoxes and June/December solstices, with matching circles around the numbers inside their date cells. Selecting a label shows its approximate local time in the detail rail. Astronomy Engine recalculates instants by year and converts them to the viewer's local civil date. The 2026 instants are checked against [US Naval Observatory data](https://aa.usno.navy.mil/data/Earth_Seasons) within two minutes; time-zone tests cover dates crossing midnight.
 - Open calendar canvas and a right detail rail, separated with a fine rule. No cards or ornamental containers.
 - Header: Orbit, A different rhythm., previous/next year controls, Today.
 - Calendar: month labels, seven tracks, date numerals, small sun, year, One trip around the Sun, selected date's percentage through the year.

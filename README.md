@@ -8,6 +8,7 @@ An interactive annual calendar inspired by Earth's orbit around the Sun.
 - Select a date to see its week. Use the year arrows or Today to navigate.
 - Focus the selected date and use left/right arrows to move by a week; up/down arrows move by a day. Home/End move to Monday/Sunday within the displayed year.
 - On small screens, use Enlarge dates to explore a larger, scrollable orbit, or select dates from the week list below.
+- Equinoxes and solstices are marked with ochre circles around their date numbers and labeled inside the orbit. Select a marker to see its approximate local time. Dates are recalculated for each year using [Astronomy Engine](https://github.com/cosinekitty/astronomy), in your browser's time zone; month-based names apply in either hemisphere.
 - Leap years and partial weeks are supported. Adjacent-year dates are blank on the wheel and selectable from the week list.
 
 ## Run

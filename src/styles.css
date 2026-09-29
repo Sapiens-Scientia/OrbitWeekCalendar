@@ -34,8 +34,20 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; pa
 .day-cell.active-week { stroke: #526e5c; stroke-width: 1.1; }
 .day-cell:focus-visible { outline: none; stroke: #1b3027; stroke-width: 2.5; }
 .day-cell.outside { stroke: #cbd0c4; }
+.season-date-circle { fill: none; stroke: #a27330; stroke-width: 1.5; pointer-events: none; }
+.season-date-circle.is-selected { stroke: #efd39a; }
+.season-marker { cursor: pointer; outline: none; }
+.season-marker line { stroke: #a27330; stroke-width: 1.5; pointer-events: none; }
+.season-marker text { fill: #86602d; text-anchor: middle; pointer-events: none; font-family: 'DM Sans', sans-serif; }
+.season-date { font-size: 9px; font-weight: 600; letter-spacing: .6px; }
+.season-kind { font-size: 8px; letter-spacing: .8px; }
+.season-hit-area { fill: transparent; stroke: transparent; }
+.season-marker:hover .season-hit-area, .season-marker:focus-visible .season-hit-area { fill: #d7bf8720; stroke: #a27330; stroke-width: .8; }
+.season-detail { color: #86602d; font-size: 12px; line-height: 1.5; margin: 12px 0 0; }
+.season-detail span { white-space: nowrap; }
 .day-number { font: 9px 'DM Sans', sans-serif; text-anchor: middle; pointer-events: none; fill: #293b36; font-variant-numeric: tabular-nums; }
 .selected-number { fill: #fff; font-weight: 600; }
+.month-outline { fill: none; stroke: #435c4f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 .month-marker text { font-family: var(--serif); font-size: 12px; letter-spacing: 1.7px; text-anchor: middle; fill: #293b36; }
 .center-year { font-family: var(--serif); font-size: 79px; letter-spacing: -2px; text-anchor: middle; fill: #293b36; }
 .center-caption { font-family: var(--serif); font-size: 19px; font-style: italic; text-anchor: middle; fill: #293b36; }

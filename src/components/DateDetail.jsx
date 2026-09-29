@@ -1,13 +1,15 @@
 import { addDays, COLORS, dateKey, dayOfYear, daysInYear, formatDate, isoWeek, startOfWeek, WEEKDAYS, weekday } from '../calendar.js';
 
-export default function DateDetail({ selected, onSelect }) {
+export default function DateDetail({ selected, seasons, onSelect }) {
   const start = startOfWeek(selected);
   const week = Array.from({ length: 7 }, (_, index) => addDays(start, index));
+  const season = seasons.find(event => event.key === dateKey(selected));
   return <aside className="date-detail" aria-label="Selected date">
     <div className="selected-date" aria-live="polite" aria-atomic="true">
       <p className="weekday-title">{WEEKDAYS[weekday(selected)]}</p>
       <h1>{formatDate(selected, { month: 'long', day: 'numeric' })}</h1>
       <p className="date-meta">Day {dayOfYear(selected)} of {daysInYear(selected.getUTCFullYear())} <span>·</span> Week {isoWeek(selected)}</p>
+      {season && <p className="season-detail">{season.name} <span>· {season.timeLabel}</span></p>}
     </div>
     <section className="week-section">
       <h2>Your week</h2>

@@ -9,6 +9,12 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test"
   },
-  "dependencies": { "react": "^19.1.1", "react-dom": "^19.1.1" },
-  "devDependencies": { "vite": "^7.1.7" }
+  "dependencies": {
+    "astronomy-engine": "^2.1.19",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "vite": "^7.1.7"
+  }
 }
