@@ -65,7 +65,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
 
   return <div className="orbit-stage">
     <div className="orbit-display-controls">
-      <button className="orbit-direction-button" aria-label="Counterclockwise calendar" aria-pressed={counterclockwise} onClick={() => setCounterclockwise(value => !value)}>
+      <button className="orbit-direction-button calendar-direction-control" aria-label="Counterclockwise calendar" aria-pressed={counterclockwise} onClick={() => setCounterclockwise(value => !value)}>
         <span aria-hidden="true">{counterclockwise ? '↺' : '↻'}</span> {counterclockwise ? 'Counterclockwise' : 'Clockwise'}
       </button>
       <button className="orbit-direction-button fade-past-control" aria-pressed={fadePast} onClick={() => setFadePast(value => !value)}>
@@ -83,13 +83,12 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         const isSelected = key === selectedKey;
         const isToday = key === todayKey;
         const season = seasons.find(event => event.key === key);
-        const isWeek = +startOfWeek(date) === selectedWeek;
         return <g key={key} className={fadePast && inYear && date < today && !isSelected ? 'past-day' : undefined}>
           <path
             ref={node => { if (node) cellRefs.current.set(key, node); else cellRefs.current.delete(key); }}
             d={arcCell(INNER + radialTrack * TRACK, INNER + (radialTrack + 1) * TRACK, start, end)}
             fill={isSelected ? '#35594d' : inYear ? FILLS[track] : '#f6f4ed'}
-            className={`day-cell${isSelected ? ' selected' : ''}${isWeek && inYear ? ' active-week' : ''}${!inYear ? ' outside' : ''}`}
+            className={`day-cell${isSelected ? ' selected' : ''}${!inYear ? ' outside' : ''}`}
             role={inYear ? 'button' : undefined}
             tabIndex={inYear && isSelected ? 0 : -1}
             aria-label={inYear ? `${formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}${isToday ? ', today' : ''}${season ? `, ${season.name}` : ''}` : undefined}
@@ -149,6 +148,13 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       <g aria-live="polite" aria-atomic="true">
         <text x="450" y="507" className="center-caption">{formatDate(selected, { weekday: 'long', month: 'long', day: 'numeric' })}</text>
         <text x="450" y="533" className="center-progress">Day {dayOfYear(selected)} of {calendar.dayCount} · Week {isoWeek(selected)}</text>
+      </g>
+      <g className="active-week-outline" aria-hidden="true">
+        {calendar.weeks.find(week => +week[0].date === selectedWeek)?.filter(cell => cell.inYear).map(cell => {
+          const ring = weekdayTrack(cell.track, cell.week, calendar.weekCount, counterclockwise);
+          const start = cell.week * step;
+          return <path key={cell.key} d={arcCell(INNER + ring * TRACK, INNER + (ring + 1) * TRACK, start, start + step)} />;
+        })}
       </g>
     </svg>
     </div>
