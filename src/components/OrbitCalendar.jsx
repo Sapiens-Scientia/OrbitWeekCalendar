@@ -50,6 +50,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
   const [counterclockwise, setCounterclockwise] = useState(true);
   const selectedKey = dateKey(selected);
   const todayKey = dateKey(today);
+  const currentWeekStart = startOfWeek(today);
   const selectedWeek = +startOfWeek(selected);
   const step = (counterclockwise ? -1 : 1) * TAU / calendar.weekCount;
 
@@ -69,7 +70,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         <span aria-hidden="true">{counterclockwise ? '↺' : '↻'}</span> {counterclockwise ? 'Counterclockwise' : 'Clockwise'}
       </button>
       <button className="orbit-direction-button fade-past-control" aria-pressed={fadePast} onClick={() => setFadePast(value => !value)}>
-        <span aria-hidden="true">◐</span> Fade past days
+        <span aria-hidden="true">◐</span> Fade past weeks
       </button>
     </div>
     <div className={`orbit-viewport${zoomed ? ' is-zoomed' : ''}`}>
@@ -84,7 +85,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         const isSelected = key === selectedKey;
         const isToday = key === todayKey;
         const season = seasons.find(event => event.key === key);
-        return <g key={key} className={fadePast && inYear && date < today && !isSelected ? 'past-day' : undefined}>
+        return <g key={key} className={fadePast && inYear && date < currentWeekStart && !isSelected ? 'past-week' : undefined}>
           <path
             ref={node => { if (node) cellRefs.current.set(key, node); else cellRefs.current.delete(key); }}
             d={arcCell(INNER + radialTrack * TRACK, INNER + (radialTrack + 1) * TRACK, start, end)}
