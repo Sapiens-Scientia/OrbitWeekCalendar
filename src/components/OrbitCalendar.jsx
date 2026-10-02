@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
-import { addDays, arcCell, dateKey, dayOfYear, FILLS, formatDate, isoWeek, point, startOfWeek, weekdayTrack } from '../calendar.js';
-import { Sun } from './Icons.jsx';
+import { addDays, arcCell, changeYear, dateKey, dayOfYear, FILLS, formatDate, isoWeek, point, startOfWeek, weekdayTrack } from '../calendar.js';
+import { Chevron, Sun } from './Icons.jsx';
 
 const INNER = 175;
 const TRACK = 30;
@@ -73,7 +73,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       </button>
     </div>
     <div className={`orbit-viewport${zoomed ? ' is-zoomed' : ''}`}>
-    <svg className="calendar" viewBox="-55 -10 1010 920" aria-labelledby="calendar-title calendar-description">
+    <svg className="calendar" viewBox="-55 15 1010 870" aria-labelledby="calendar-title calendar-description">
       <title id="calendar-title">{calendar.year} orbital calendar</title>
       <desc id="calendar-description">The year moves {counterclockwise ? 'counterclockwise' : 'clockwise'} from January at the top. Each spoke reads Monday through Sunday from left to right: Monday is innermost on the right half and outermost on the left half. Each spoke is one week, with its ISO week number just inside the inner ring. Select a date to explore. Arrow left and right move one week; up and down move one day.</desc>
       {calendar.weeks.flat().map(({ date, key, track, week, inYear }) => {
@@ -144,7 +144,18 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         </g>;
       })}
       <Sun />
-      <text x="450" y="475" className="center-year">{calendar.year}</text>
+      <foreignObject x="320" y="326" width="260" height="88">
+        <div className="center-year-controls">
+          <button className="icon-button" aria-label="Previous year" disabled={calendar.year <= 1900} onClick={() => onSelect(changeYear(selected, calendar.year - 1))}><Chevron direction="left" /></button>
+          <div className="center-year-picker">
+            <select className="center-year" aria-label="Displayed year" value={calendar.year} onChange={event => onSelect(changeYear(selected, Number(event.target.value)))}>
+              {Array.from({ length: 301 }, (_, index) => 1900 + index).map(year => <option key={year} value={year}>{year}</option>)}
+            </select>
+            <span className="year-picker-chevron" aria-hidden="true">⌄</span>
+          </div>
+          <button className="icon-button" aria-label="Next year" disabled={calendar.year >= 2200} onClick={() => onSelect(changeYear(selected, calendar.year + 1))}><Chevron /></button>
+        </div>
+      </foreignObject>
       <g aria-live="polite" aria-atomic="true">
         <text x="450" y="507" className="center-caption">{formatDate(selected, { weekday: 'long', month: 'long', day: 'numeric' })}</text>
         <text x="450" y="533" className="center-progress">Day {dayOfYear(selected)} of {calendar.dayCount} · Week {isoWeek(selected)}</text>

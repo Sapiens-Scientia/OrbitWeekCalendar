@@ -11,6 +11,7 @@ An interactive annual calendar inspired by Earth's orbit around the Sun.
 - The year moves counterclockwise by default from January at the top, with month labels around the rim.
 - Use the direction button in the bottom-left corner to switch between clockwise and counterclockwise.
 - Select a date to see its week. Use the year arrows or Today to navigate.
+- Jump to any of the five years before or after the displayed year using the header timeline, or choose a year from the dropdown (1900–2200). On narrow screens, swipe the timeline to see more years.
 - Focus the selected date and use left/right arrows to move by a week; up/down arrows move by a day. Home/End move to Monday/Sunday within the displayed year.
 - On small screens, use Enlarge dates to explore a larger, scrollable orbit, or select dates from the week list below.
 - Equinoxes and solstices are marked with ochre circles around their date numbers and labeled inside the orbit. Select a marker to see its approximate local time. Dates are recalculated for each year using [Astronomy Engine](https://github.com/cosinekitty/astronomy), in your browser's time zone; month-based names apply in either hemisphere.

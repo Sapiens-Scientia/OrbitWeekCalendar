@@ -15,14 +15,27 @@ button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-c
 button:focus-visible { outline: 2px solid #35594d; outline-offset: 4px; }
 button:disabled { cursor: default; opacity: .35; }
 .app-shell { max-width: 1680px; margin: auto; padding: 0 36px; }
-.app-header { height: 72px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--rule); }
+.app-header { height: 56px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 24px; border-bottom: 1px solid var(--rule); }
 .brand { display: flex; align-items: center; gap: 18px; }
-.brand-name { font-family: var(--serif); font-size: 42px; font-weight: 600; letter-spacing: -1.2px; }
-.year-controls { display: flex; align-items: center; gap: 7px; }
+.brand-name { font-family: var(--serif); font-size: 34px; font-weight: 600; letter-spacing: -1.2px; }
+.orbit-mark { width: 34px; height: 34px; }
+.year-controls { display: flex; align-items: center; gap: 7px; flex-shrink: 0; justify-self: end; }
+.year-timeline { position: relative; display: flex; align-items: center; width: 484px; max-width: 100%; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.year-timeline::-webkit-scrollbar { display: none; }
+.year-timeline button { position: relative; flex: 0 0 44px; min-height: 44px; padding: 20px 5px 5px; border: 0; border-radius: 5px; background: transparent; font-size: 12px; color: #798176; font-variant-numeric: tabular-nums; }
+.year-timeline button::before { content: ''; position: absolute; top: 10px; left: 0; right: 0; height: 1px; background: #bdc4b8; }
+.year-timeline button:first-child::before { left: 50%; }
+.year-timeline button:last-child::before { right: 50%; }
+.year-timeline button::after { content: ''; position: absolute; top: 7px; left: calc(50% - 3.5px); width: 7px; height: 7px; border-radius: 50%; background: #94a199; }
+.year-timeline button[aria-current='date']::after { background: #35594d; }
+.year-timeline button:hover { background: #e8eade; color: #293b36; }
+.year-timeline button[aria-current='date'] { background: #e8eade; color: #35594d; font-weight: 600; }
+.year-timeline button:focus-visible { outline-offset: -2px; }
 .icon-button { display: grid; place-items: center; width: 34px; height: 38px; border: 0; background: transparent; border-radius: 5px; }
 .icon-button:hover, .today-button:hover { background: #e8eade; }
-.header-year { font-family: var(--serif); font-size: 30px; min-width: 62px; text-align: center; font-variant-numeric: tabular-nums; }
-.today-button { font-size: 13px; background: none; border: 1px solid #607468; border-radius: 7px; padding: 10px 28px; margin-left: 23px; transition: background .15s; }
+.header-year { font-family: var(--serif); font-size: 30px; min-width: 86px; text-align: center; font-variant-numeric: tabular-nums; color: inherit; background: transparent; border: 0; border-radius: 5px; cursor: pointer; }
+.header-year:focus-visible { outline: 2px solid #35594d; outline-offset: 2px; }
+.today-button { font-size: 13px; background: none; border: 1px solid #607468; border-radius: 7px; padding: 10px 28px; margin-left: 0; transition: background .15s; }
 main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; padding: 12px 0 18px; }
 .orbit-stage { min-width: 0; position: relative; align-self: center; }
 .orbit-display-controls { position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
@@ -58,7 +71,15 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; pa
 .selected-number { fill: #fff; font-weight: 600; }
 .month-outline { fill: none; stroke: #435c4f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 .month-marker text { font-family: var(--serif); font-size: 12px; letter-spacing: 1.7px; text-anchor: middle; fill: #293b36; }
-.center-year { font-family: var(--serif); font-size: 79px; letter-spacing: -2px; text-anchor: middle; fill: #293b36; }
+.center-year { font-family: var(--serif); font-size: 64px; letter-spacing: -1.5px; text-anchor: middle; fill: #293b36; }
+.center-year-controls { display: flex; align-items: center; justify-content: center; height: 88px; gap: 5px; }
+.center-year-controls .icon-button { width: 24px; height: 38px; flex-shrink: 0; }
+.center-year-picker { position: relative; }
+select.center-year { appearance: none; display: block; width: 166px; height: 86px; padding: 0 14px; line-height: 1; text-align: center; color: #293b36; border: 0; border-radius: 6px; background: transparent; cursor: pointer; }
+select.center-year:hover { background: #e8eade; }
+select.center-year:focus-visible { outline: 2px solid #35594d; outline-offset: -2px; }
+.center-year option { font-family: 'DM Sans', sans-serif; font-size: 16px; letter-spacing: normal; }
+.year-picker-chevron { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none; color: #607068; }
 .center-caption { font-family: var(--serif); font-size: 19px; font-style: italic; text-anchor: middle; fill: #293b36; }
 .center-progress { font: 11px 'DM Sans', sans-serif; text-anchor: middle; fill: #5a6a61; }
 .keyboard-hint { text-align: center; font-size: 10px; color: #798176; margin: -6px 0 0; letter-spacing: .1px; }
@@ -102,10 +123,10 @@ footer { display: flex; justify-content: space-between; border-top: 1px solid va
 @media (max-width: 1100px) { .app-shell { padding: 0 24px; } main { grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; } .date-detail { padding-left: 22px; } h1 { font-size: 42px; } .reading-section p { font-size: 20px; } .keyboard-hint { font-size: 9px; } }
 @media (max-width: 800px) {
   .app-shell { padding: 0 20px; }
-  .app-header { height: 78px; }
+  .app-header { height: 56px; }
   .brand { gap: 9px; } .brand-name { font-size: 35px; } .orbit-mark { width: 33px; }
   .today-button { margin-left: 8px; padding: 8px 17px; }
-  .header-year { font-size: 25px; min-width: 50px; }
+  .header-year { font-size: 25px; min-width: 76px; }
   main { display: flex; flex-direction: column; padding-top: 14px; gap: 26px; }
   .orbit-stage { width: 100%; }
   .calendar { max-height: none; }
@@ -122,8 +143,8 @@ footer { display: flex; justify-content: space-between; border-top: 1px solid va
 }
 @media (max-width: 480px) {
   .app-shell { padding: 0 14px; }
-  .app-header { height: 70px; }
-  .brand-name { font-size: 30px; line-height: 1; } .brand { gap: 5px; min-width: 0; }
+  .app-header { height: 58px; }
+  .brand-name { font-size: 26px; line-height: 1; } .brand { gap: 5px; min-width: 0; }
   .orbit-mark { width: 29px; }
   .year-controls { gap: 0; flex-shrink: 0; } .icon-button { width: 28px; } .today-button { padding: 7px 12px; font-size: 12px; }
   .calendar { width: calc(100% + 16px); margin-left: -8px; }
@@ -141,8 +162,29 @@ footer { display: flex; justify-content: space-between; border-top: 1px solid va
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
 
 /* Let the orbit use the full canvas now that date details live at its center. */
-main { display: flex; justify-content: center; padding: 12px 0 18px; }
-.orbit-stage { width: min(100%, calc(109.78svh - 159px)); margin-inline: auto; }
+main { display: flex; justify-content: center; padding: 6px 0 48px; }
+.orbit-stage { width: min(100%, calc(116.09svh - 125.38px)); margin-inline: auto; }
 .calendar { max-height: none; }
 .center-caption { font-style: normal; font-size: 18px; }
-@media (max-width: 800px) { .orbit-stage { width: 100%; } }
+@media (min-width: 801px) {
+  .keyboard-hint { position: fixed; left: 50%; bottom: 31px; transform: translateX(-50%); margin: 0; white-space: nowrap; }
+}
+@media (max-width: 800px) {
+  .orbit-stage { width: 100%; }
+  .keyboard-hint { margin: 24px 0 28px; }
+}
+@media (max-width: 1100px) {
+  .app-header { grid-template-columns: 240px minmax(0, 1fr) 240px; gap: 12px; }
+  .year-timeline { width: min(100%, 484px); justify-self: center; }
+}
+@media (max-width: 800px) {
+  .app-header { grid-template-columns: 160px minmax(0, 1fr) 160px; }
+  .brand-name { font-size: 26px; }
+  .brand .orbit-mark { display: none; }
+}
+@media (max-width: 480px) {
+  .app-header { grid-template-columns: 100px minmax(0, 1fr) 100px; gap: 8px; }
+  .brand-name { font-size: 22px; white-space: nowrap; }
+  .brand .orbit-mark { display: none; }
+  .today-button { margin-left: 0; }
+}

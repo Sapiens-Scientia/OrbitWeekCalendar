@@ -7,5 +7,5 @@ export function OrbitMark() {
 }
 
 export function Sun() {
-  return <g className="sun" aria-hidden="true"><circle cx="450" cy="382" r="17" fill="#cfa45e" />{Array.from({ length: 12 }, (_, i) => <line key={i} x1="450" y1="351" x2="450" y2="358" transform={`rotate(${i * 30} 450 382)`} stroke="#cfa45e" strokeWidth="1.7" />)}</g>;
+  return <g className="sun" aria-hidden="true"><circle cx="450" cy="450" r="17" fill="#cfa45e" />{Array.from({ length: 12 }, (_, i) => <line key={i} x1="450" y1="419" x2="450" y2="426" transform={`rotate(${i * 30} 450 450)`} stroke="#cfa45e" strokeWidth="1.7" />)}</g>;
 }
