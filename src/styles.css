@@ -18,7 +18,6 @@ button:disabled { cursor: default; opacity: .35; }
 .app-header { height: 72px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--rule); }
 .brand { display: flex; align-items: center; gap: 18px; }
 .brand-name { font-family: var(--serif); font-size: 42px; font-weight: 600; letter-spacing: -1.2px; }
-.tagline { font-family: var(--serif); font-size: 19px; padding-left: 21px; margin-left: 3px; border-left: 1px solid #94a199; }
 .year-controls { display: flex; align-items: center; gap: 7px; }
 .icon-button { display: grid; place-items: center; width: 34px; height: 38px; border: 0; background: transparent; border-radius: 5px; }
 .icon-button:hover, .today-button:hover { background: #e8eade; }
@@ -26,8 +25,11 @@ button:disabled { cursor: default; opacity: .35; }
 .today-button { font-size: 13px; background: none; border: 1px solid #607468; border-radius: 7px; padding: 10px 28px; margin-left: 23px; transition: background .15s; }
 main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; padding: 12px 0 18px; }
 .orbit-stage { min-width: 0; position: relative; align-self: center; }
-.fade-past-control { position: fixed; right: 24px; bottom: 18px; z-index: 2; padding: 8px 10px; border-radius: 6px; background: #f6f4ed; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; color: #5f6c61; cursor: pointer; }
-.fade-past-control input { accent-color: #35594d; }
+.orbit-display-controls { position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.orbit-direction-button { display: flex; align-items: center; gap: 7px; min-height: 40px; padding: 8px 12px; border: 1px solid #94a199; border-radius: 7px; background: #f6f4ed; font-size: 12px; }
+.orbit-direction-button span { font-size: 20px; line-height: 1; }
+.orbit-direction-button:hover { background: #e8eade; }
+.orbit-direction-button[aria-pressed='true'] { background: #e8eade; border-color: #35594d; }
 .past-day { opacity: .35; }
 .past-day:hover, .past-day:focus-within { opacity: 1; }
 .orbit-zoom-button { display: none; }
@@ -101,7 +103,6 @@ footer { display: flex; justify-content: space-between; border-top: 1px solid va
   .app-shell { padding: 0 20px; }
   .app-header { height: 78px; }
   .brand { gap: 9px; } .brand-name { font-size: 35px; } .orbit-mark { width: 33px; }
-  .tagline { display: none; }
   .today-button { margin-left: 8px; padding: 8px 17px; }
   .header-year { font-size: 25px; min-width: 50px; }
   main { display: flex; flex-direction: column; padding-top: 14px; gap: 26px; }
@@ -121,9 +122,9 @@ footer { display: flex; justify-content: space-between; border-top: 1px solid va
 @media (max-width: 480px) {
   .app-shell { padding: 0 14px; }
   .app-header { height: 70px; }
-  .brand-name { font-size: 30px; } .brand { gap: 5px; }
+  .brand-name { font-size: 30px; line-height: 1; } .brand { gap: 5px; min-width: 0; }
   .orbit-mark { width: 29px; }
-  .year-controls { gap: 0; } .icon-button { width: 28px; } .today-button { padding: 7px 12px; font-size: 12px; }
+  .year-controls { gap: 0; flex-shrink: 0; } .icon-button { width: 28px; } .today-button { padding: 7px 12px; font-size: 12px; }
   .calendar { width: calc(100% + 16px); margin-left: -8px; }
   .day-number { font-size: 10px; }
   .month-marker text { font-size: 14px; letter-spacing: 1px; }

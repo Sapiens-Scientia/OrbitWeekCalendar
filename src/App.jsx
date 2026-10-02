@@ -12,7 +12,7 @@ export default function App() {
   const seasons = useMemo(() => seasonEvents(year), [year]);
   return <div className="app-shell">
     <header className="app-header">
-      <div className="brand"><OrbitMark /><span className="brand-name">Orbit</span><span className="tagline">A different rhythm.</span></div>
+      <div className="brand"><OrbitMark /><span className="brand-name">Orbit Weeks</span></div>
       <nav className="year-controls" aria-label="Calendar year">
         <button className="icon-button" aria-label="Previous year" disabled={year <= 1900} onClick={() => setSelected(changeYear(selected, year - 1))}><Chevron direction="left" /></button>
         <span className="header-year" aria-live="polite">{year}</span>

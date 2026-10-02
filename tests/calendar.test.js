@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { calendarYear, changeYear, civilDate, dateKey, dayOfYear, isoWeek, weekday } from '../src/calendar.js';
+import { calendarYear, changeYear, civilDate, dateKey, dayOfYear, isoWeek, point, weekday, weekdayTrack } from '../src/calendar.js';
 
 test('every civil date appears once, on its weekday track, for a full Gregorian cycle', () => {
   for (let year = 2000; year < 2400; year++) {
@@ -38,4 +38,21 @@ test('ISO week numbers match year boundary and reference dates', () => {
   assert.equal(dayOfYear(civilDate(2026, 8, 28)), 271);
   assert.equal(isoWeek(civilDate(2021, 0, 1)), 53);
   assert.equal(isoWeek(civilDate(2024, 11, 30)), 1);
+});
+
+test('weekday positions read Monday to Sunday left to right in either orbit direction', () => {
+  for (const weekCount of [53, 54]) {
+    for (const counterclockwise of [false, true]) {
+      for (let week = 0; week < weekCount; week++) {
+        const angle = (week + .5) * Math.PI * 2 / weekCount * (counterclockwise ? -1 : 1);
+        const rings = Array.from({ length: 7 }, (_, track) => weekdayTrack(track, week, weekCount, counterclockwise));
+        assert.equal(new Set(rings).size, 7);
+        const xs = rings.map(ring => point(175 + 30 * (ring + .5), angle)[0]);
+        for (let track = 1; track < 7; track++) assert.ok(xs[track] >= xs[track - 1] - 1e-9);
+        for (let track = 0; track < 7; track++) {
+          assert.equal(weekdayTrack(rings[track], week, weekCount, counterclockwise), track);
+        }
+      }
+    }
+  }
 });

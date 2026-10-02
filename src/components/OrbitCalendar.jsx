@@ -1,34 +1,41 @@
 import { useRef, useState } from 'react';
-import { addDays, arcCell, dateKey, dayOfYear, FILLS, formatDate, isoWeek, point, startOfWeek } from '../calendar.js';
+import { addDays, arcCell, dateKey, dayOfYear, FILLS, formatDate, isoWeek, point, startOfWeek, weekdayTrack } from '../calendar.js';
 import { Sun } from './Icons.jsx';
 
 const INNER = 175;
 const TRACK = 30;
 const TAU = Math.PI * 2;
 
-function monthOutline(weeks, month, step) {
+function monthOutline(weeks, month, step, counterclockwise) {
   const belongsToMonth = cell => cell?.inYear && cell.date.getUTCMonth() === month;
   const edges = [];
+  const sweep = step > 0 ? 1 : 0;
 
   for (const cell of weeks.flat()) {
     if (!belongsToMonth(cell)) continue;
     const { week, track } = cell;
-    const inner = INNER + (6 - track) * TRACK;
+    const radialTrack = weekdayTrack(track, week, weeks.length, counterclockwise);
+    const inner = INNER + radialTrack * TRACK;
     const outer = inner + TRACK;
     const start = week * step;
     const end = start + step;
 
-    // Only draw exposed edges, so a month has one stepped outline across its tracks.
-    if (!belongsToMonth(weeks[week][track - 1])) {
-      edges.push(`M ${point(outer, start)} A ${outer} ${outer} 0 0 1 ${point(outer, end)}`);
+    const neighbor = (neighborWeek, neighborRing) => {
+      if (neighborRing < 0 || neighborRing > 6 || !weeks[neighborWeek]) return undefined;
+      return weeks[neighborWeek][weekdayTrack(neighborRing, neighborWeek, weeks.length, counterclockwise)];
+    };
+
+    // Compare physical neighbors, including where weekday order flips between halves.
+    if (!belongsToMonth(neighbor(week, radialTrack + 1))) {
+      edges.push(`M ${point(outer, start)} A ${outer} ${outer} 0 0 ${sweep} ${point(outer, end)}`);
     }
-    if (!belongsToMonth(weeks[week][track + 1])) {
-      edges.push(`M ${point(inner, start)} A ${inner} ${inner} 0 0 1 ${point(inner, end)}`);
+    if (!belongsToMonth(neighbor(week, radialTrack - 1))) {
+      edges.push(`M ${point(inner, start)} A ${inner} ${inner} 0 0 ${sweep} ${point(inner, end)}`);
     }
-    if (!belongsToMonth(weeks[week - 1]?.[track])) {
+    if (!belongsToMonth(neighbor(week - 1, radialTrack))) {
       edges.push(`M ${point(inner, start)} L ${point(outer, start)}`);
     }
-    if (!belongsToMonth(weeks[week + 1]?.[track])) {
+    if (!belongsToMonth(neighbor(week + 1, radialTrack))) {
       edges.push(`M ${point(inner, end)} L ${point(outer, end)}`);
     }
   }
@@ -40,10 +47,11 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
   const cellRefs = useRef(new Map());
   const [zoomed, setZoomed] = useState(false);
   const [fadePast, setFadePast] = useState(false);
+  const [counterclockwise, setCounterclockwise] = useState(true);
   const selectedKey = dateKey(selected);
   const todayKey = dateKey(today);
   const selectedWeek = +startOfWeek(selected);
-  const step = TAU / calendar.weekCount;
+  const step = (counterclockwise ? -1 : 1) * TAU / calendar.weekCount;
 
   function navigate(event, date) {
     const offsets = { ArrowRight: 7, ArrowLeft: -7, ArrowUp: -1, ArrowDown: 1, Home: -((date.getUTCDay() + 6) % 7), End: 6 - ((date.getUTCDay() + 6) % 7) };
@@ -56,14 +64,21 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
   }
 
   return <div className="orbit-stage">
-    <label className="fade-past-control"><input type="checkbox" checked={fadePast} onChange={event => setFadePast(event.target.checked)} /> Fade past days</label>
+    <div className="orbit-display-controls">
+      <button className="orbit-direction-button" aria-label="Counterclockwise calendar" aria-pressed={counterclockwise} onClick={() => setCounterclockwise(value => !value)}>
+        <span aria-hidden="true">{counterclockwise ? '↺' : '↻'}</span> {counterclockwise ? 'Counterclockwise' : 'Clockwise'}
+      </button>
+      <button className="orbit-direction-button fade-past-control" aria-pressed={fadePast} onClick={() => setFadePast(value => !value)}>
+        <span aria-hidden="true">◐</span> Fade past days
+      </button>
+    </div>
     <div className={`orbit-viewport${zoomed ? ' is-zoomed' : ''}`}>
     <svg className="calendar" viewBox="-55 -10 1010 920" aria-labelledby="calendar-title calendar-description">
       <title id="calendar-title">{calendar.year} orbital calendar</title>
-      <desc id="calendar-description">Seven rings: Monday outermost to Sunday innermost. Each spoke is one week, with its ISO week number just inside the inner ring. Select a date to explore. Arrow left and right move one week; up and down move one day.</desc>
+      <desc id="calendar-description">The year moves {counterclockwise ? 'counterclockwise' : 'clockwise'} from January at the top. Each spoke reads Monday through Sunday from left to right: Monday is innermost on the right half and outermost on the left half. Each spoke is one week, with its ISO week number just inside the inner ring. Select a date to explore. Arrow left and right move one week; up and down move one day.</desc>
       {calendar.weeks.flat().map(({ date, key, track, week, inYear }) => {
         const start = week * step, end = start + step;
-        const radialTrack = 6 - track; // Monday outside, Sunday nearest the Sun.
+        const radialTrack = weekdayTrack(track, week, calendar.weekCount, counterclockwise);
         const [x, y] = point(INNER + TRACK * (radialTrack + .5), start + step / 2);
         const isSelected = key === selectedKey;
         const isToday = key === todayKey;
@@ -97,7 +112,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         const [x, y] = point(415, angle);
         const anchor = side < -.4 ? 'end' : side > .4 ? 'start' : 'middle';
         return <g key={month} className="month-marker" aria-hidden="true">
-          <path className="month-outline" d={monthOutline(calendar.weeks, month, step)} />
+          <path className="month-outline" d={monthOutline(calendar.weeks, month, step, counterclockwise)} />
           <text x={x} y={y} dy=".35em" style={{ textAnchor: anchor }}>{formatDate(first.date, { month: 'long' }).toUpperCase()}</text>
         </g>;
       })}
