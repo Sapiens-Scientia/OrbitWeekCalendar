@@ -73,6 +73,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       </button>
     </div>
     <div className={`orbit-viewport${zoomed ? ' is-zoomed' : ''}`}>
+    <div className="calendar-canvas">
     <svg className="calendar" viewBox="-55 15 1010 870" aria-labelledby="calendar-title calendar-description">
       <title id="calendar-title">{calendar.year} orbital calendar</title>
       <desc id="calendar-description">The year moves {counterclockwise ? 'counterclockwise' : 'clockwise'} from January at the top. Each spoke reads Monday through Sunday from left to right: Monday is innermost on the right half and outermost on the left half. Each spoke is one week, with its ISO week number just inside the inner ring. Select a date to explore. Arrow left and right move one week; up and down move one day.</desc>
@@ -144,18 +145,6 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         </g>;
       })}
       <Sun />
-      <foreignObject x="320" y="326" width="260" height="88">
-        <div className="center-year-controls">
-          <button className="icon-button" aria-label="Previous year" disabled={calendar.year <= 1900} onClick={() => onSelect(changeYear(selected, calendar.year - 1))}><Chevron direction="left" /></button>
-          <div className="center-year-picker">
-            <select className="center-year" aria-label="Displayed year" value={calendar.year} onChange={event => onSelect(changeYear(selected, Number(event.target.value)))}>
-              {Array.from({ length: 301 }, (_, index) => 1900 + index).map(year => <option key={year} value={year}>{year}</option>)}
-            </select>
-            <span className="year-picker-chevron" aria-hidden="true">⌄</span>
-          </div>
-          <button className="icon-button" aria-label="Next year" disabled={calendar.year >= 2200} onClick={() => onSelect(changeYear(selected, calendar.year + 1))}><Chevron /></button>
-        </div>
-      </foreignObject>
       <g aria-live="polite" aria-atomic="true">
         <text x="450" y="507" className="center-caption">{formatDate(selected, { weekday: 'long', month: 'long', day: 'numeric' })}</text>
         <text x="450" y="533" className="center-progress">Day {dayOfYear(selected)} of {calendar.dayCount} · Week {isoWeek(selected)}</text>
@@ -168,6 +157,18 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         })}
       </g>
     </svg>
+        <div className="center-year-controls">
+          <button className="icon-button" aria-label="Previous year" disabled={calendar.year <= 1900} onClick={() => onSelect(changeYear(selected, calendar.year - 1))}><Chevron direction="left" /></button>
+          <div className="center-year-picker">
+            <span className="center-year" aria-hidden="true">{calendar.year}</span>
+            <select className="center-year-select" aria-label="Displayed year" value={calendar.year} onChange={event => onSelect(changeYear(selected, Number(event.target.value)))}>
+              {Array.from({ length: 301 }, (_, index) => 1900 + index).map(year => <option key={year} value={year}>{year}</option>)}
+            </select>
+            <span className="year-picker-chevron" aria-hidden="true">⌄</span>
+          </div>
+          <button className="icon-button" aria-label="Next year" disabled={calendar.year >= 2200} onClick={() => onSelect(changeYear(selected, calendar.year + 1))}><Chevron /></button>
+        </div>
+    </div>
     </div>
     <button className="orbit-zoom-button" aria-pressed={zoomed} onClick={() => setZoomed(value => !value)}>{zoomed ? 'Show full orbit' : 'Enlarge dates'}</button>
     <p className="keyboard-hint">Select a day to explore <span>·</span> Use arrow keys to move through time</p>
