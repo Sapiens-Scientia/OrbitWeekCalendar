@@ -3,6 +3,16 @@ export const DAY = 86_400_000;
 export const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 export const COLORS = ['#e5ddca', '#e5ddca', '#e5ddca', '#e5ddca', '#e5ddca', '#dfbf6c', '#dfbf6c'];
 export const FILLS = ['#f1ecdf', '#f1ecdf', '#f1ecdf', '#f1ecdf', '#f1ecdf', '#efe4c1', '#efe4c1'];
+export const QUARTER_PALETTES = [
+  { weekday: '#e0e9ed', weekend: '#afc8d5' }, // Winter: frost and blue slate.
+  { weekday: '#e3ead8', weekend: '#bdd09f' }, // Spring: young leaves and sage.
+  { weekday: '#f2e4bc', weekend: '#dfc579' }, // Summer: sunlight and golden fields.
+  { weekday: '#efdbcb', weekend: '#d5a980' }, // Autumn: warm clay and fallen leaves.
+];
+export const quarterFill = date => {
+  const palette = QUARTER_PALETTES[Math.floor(date.getUTCMonth() / 3)];
+  return weekday(date) < 5 ? palette.weekday : palette.weekend;
+};
 export const civilDate = (year, month, day) => new Date(Date.UTC(year, month, day));
 export const dateKey = (date) => date.toISOString().slice(0, 10);
 export const weekday = (date) => (date.getUTCDay() + 6) % 7;

@@ -7,7 +7,7 @@ An interactive annual calendar inspired by Earth's orbit around the Sun.
 - Each angular spoke is a Monday–Sunday week.
 - ISO week numbers sit just inside the innermost ring, aligned with their spokes; the selected week is emphasized.
 - Exactly seven tracks show Monday–Sunday from left to right on both halves: Monday is outermost on the left and innermost on the right. Weekday order reverses halfway around the orbit and follows the direction toggle.
-- Weekdays share one pale parchment color; weekends share one soft ochre color.
+- Each quarter has a seasonal palette: winter blues (January–March), spring greens (April–June), summer golds (July–September), and autumn clay (October–December). Weekends use a deeper shade within each palette.
 - The year moves counterclockwise by default from January at the top, with month labels around the rim.
 - Use the direction button in the bottom-left corner to switch between clockwise and counterclockwise.
 - Select a date to see its week. Use the year arrows or Today to navigate.

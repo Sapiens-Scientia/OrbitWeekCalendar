@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { addDays, arcCell, changeYear, dateKey, dayOfYear, FILLS, formatDate, isoWeek, point, startOfWeek, weekdayTrack } from '../calendar.js';
+import { addDays, arcCell, changeYear, dateKey, dayOfYear, formatDate, isoWeek, point, quarterFill, startOfWeek, weekdayTrack } from '../calendar.js';
 import { Chevron, Sun } from './Icons.jsx';
 
 const INNER = 175;
@@ -87,7 +87,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
           <path
             ref={node => { if (node) cellRefs.current.set(key, node); else cellRefs.current.delete(key); }}
             d={arcCell(INNER + radialTrack * TRACK, INNER + (radialTrack + 1) * TRACK, start, end)}
-            fill={isSelected ? '#35594d' : inYear ? FILLS[track] : '#f6f4ed'}
+            fill={isSelected ? '#35594d' : inYear ? quarterFill(date) : '#f6f4ed'}
             className={`day-cell${isSelected ? ' selected' : ''}${!inYear ? ' outside' : ''}`}
             role={inYear ? 'button' : undefined}
             tabIndex={inYear && isSelected ? 0 : -1}
