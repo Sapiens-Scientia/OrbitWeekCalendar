@@ -6,23 +6,24 @@ const INNER = 175;
 const TRACK = 30;
 const TAU = Math.PI * 2;
 
-function monthOutline(weeks, month, step, counterclockwise) {
+function monthOutline(weeks, month, step, counterclockwise, januaryAtBottom) {
   const belongsToMonth = cell => cell?.inYear && cell.date.getUTCMonth() === month;
   const edges = [];
   const sweep = step > 0 ? 1 : 0;
+  const angleOffset = januaryAtBottom ? Math.PI : 0;
 
   for (const cell of weeks.flat()) {
     if (!belongsToMonth(cell)) continue;
     const { week, track } = cell;
-    const radialTrack = weekdayTrack(track, week, weeks.length, counterclockwise);
+    const radialTrack = weekdayTrack(track, week, weeks.length, counterclockwise, januaryAtBottom);
     const inner = INNER + radialTrack * TRACK;
     const outer = inner + TRACK;
-    const start = week * step;
+    const start = angleOffset + week * step;
     const end = start + step;
 
     const neighbor = (neighborWeek, neighborRing) => {
       if (neighborRing < 0 || neighborRing > 6 || !weeks[neighborWeek]) return undefined;
-      return weeks[neighborWeek][weekdayTrack(neighborRing, neighborWeek, weeks.length, counterclockwise)];
+      return weeks[neighborWeek][weekdayTrack(neighborRing, neighborWeek, weeks.length, counterclockwise, januaryAtBottom)];
     };
 
     // Compare physical neighbors, including where weekday order flips between halves.
@@ -43,7 +44,7 @@ function monthOutline(weeks, month, step, counterclockwise) {
   return edges.join(' ');
 }
 
-export default function OrbitCalendar({ calendar, seasons, selected, today, onSelect }) {
+export default function OrbitCalendar({ calendar, seasons, selected, today, onSelect, januaryAtBottom, onToggleJanuaryPosition }) {
   const cellRefs = useRef(new Map());
   const [zoomed, setZoomed] = useState(false);
   const [fadePast, setFadePast] = useState(false);
@@ -53,6 +54,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
   const currentWeekStart = startOfWeek(today);
   const selectedWeek = +startOfWeek(selected);
   const step = (counterclockwise ? -1 : 1) * TAU / calendar.weekCount;
+  const angleOffset = januaryAtBottom ? Math.PI : 0;
 
   function navigate(event, date) {
     const offsets = { ArrowRight: 7, ArrowLeft: -7, ArrowUp: -1, ArrowDown: 1, Home: -((date.getUTCDay() + 6) % 7), End: 6 - ((date.getUTCDay() + 6) % 7) };
@@ -69,6 +71,10 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       <button className="orbit-direction-button calendar-direction-control" aria-label="Counterclockwise calendar" aria-pressed={counterclockwise} onClick={() => setCounterclockwise(value => !value)}>
         <span aria-hidden="true">{counterclockwise ? '↺' : '↻'}</span> {counterclockwise ? 'Counterclockwise' : 'Clockwise'}
       </button>
+      <button className="orbit-direction-button january-position-control" aria-label="January 1 at bottom" aria-pressed={januaryAtBottom} onClick={onToggleJanuaryPosition}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 3v18m-4-4 4 4 4-4M16 21V3m-4 4 4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        Jan 1 at bottom
+      </button>
       <button className="orbit-direction-button fade-past-control" aria-pressed={fadePast} onClick={() => setFadePast(value => !value)}>
         <span aria-hidden="true">◐</span> Fade past weeks
       </button>
@@ -77,10 +83,10 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
     <div className="calendar-canvas">
     <svg className="calendar" viewBox="-55 15 1010 870" aria-labelledby="calendar-title calendar-description">
       <title id="calendar-title">{calendar.year} orbital calendar</title>
-      <desc id="calendar-description">The year moves {counterclockwise ? 'counterclockwise' : 'clockwise'} from January at the top. Each spoke reads Monday through Sunday from left to right: Monday is innermost on the right half and outermost on the left half. Each spoke is one week, with its ISO week number just inside the inner ring. Select a date to explore. Arrow left and right move one week; up and down move one day.</desc>
+      <desc id="calendar-description">The year moves {counterclockwise ? 'counterclockwise' : 'clockwise'} from January at the {januaryAtBottom ? 'bottom' : 'top'}. Each spoke reads Monday through Sunday from left to right: Monday is innermost on the right half and outermost on the left half. Each spoke is one week, with its ISO week number just inside the inner ring. Select a date to explore. Arrow left and right move one week; up and down move one day.</desc>
       {calendar.weeks.flat().map(({ date, key, track, week, inYear }) => {
-        const start = week * step, end = start + step;
-        const radialTrack = weekdayTrack(track, week, calendar.weekCount, counterclockwise);
+        const start = angleOffset + week * step, end = start + step;
+        const radialTrack = weekdayTrack(track, week, calendar.weekCount, counterclockwise, januaryAtBottom);
         const [x, y] = point(INNER + TRACK * (radialTrack + .5), start + step / 2);
         const isSelected = key === selectedKey;
         const isToday = key === todayKey;
@@ -108,17 +114,17 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         const first = cells[0], last = cells.at(-1);
         const a = (first.week + first.track / 7) * step;
         const b = (last.week + (last.track + 1) / 7) * step;
-        const angle = (a + b) / 2;
+        const angle = angleOffset + (a + b) / 2;
         const side = Math.sin(angle);
         const [x, y] = point(415, angle);
         const anchor = side < -.4 ? 'end' : side > .4 ? 'start' : 'middle';
         return <g key={month} className="month-marker" aria-hidden="true">
-          <path className="month-outline" d={monthOutline(calendar.weeks, month, step, counterclockwise)} />
+          <path className="month-outline" d={monthOutline(calendar.weeks, month, step, counterclockwise, januaryAtBottom)} />
           <text x={x} y={y} dy=".35em" style={{ textAnchor: anchor }}>{formatDate(first.date, { month: 'long' }).toUpperCase()}</text>
         </g>;
       })}
       {calendar.weeks.map((week, index) => {
-        const [x, y] = point(INNER - 11, (index + .5) * step);
+        const [x, y] = point(INNER - 11, angleOffset + (index + .5) * step);
         const number = isoWeek(week[0].date);
         return <text key={week[0].key} x={x} y={y} dy=".35em"
           className={`orbit-week-number${+week[0].date === selectedWeek ? ' is-selected' : ''}`}
@@ -130,7 +136,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       {seasons.map(season => {
         const cell = calendar.weeks.flat().find(day => day.key === season.key);
         if (!cell) return null;
-        const angle = (cell.week + .5) * step;
+        const angle = angleOffset + (cell.week + .5) * step;
         const [x, y] = point(130, angle);
         const [tickX, tickY] = point(149, angle);
         const [edgeX, edgeY] = point(154, angle);
@@ -152,8 +158,8 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       </g>
       <g className="active-week-outline" aria-hidden="true">
         {calendar.weeks.find(week => +week[0].date === selectedWeek)?.filter(cell => cell.inYear).map(cell => {
-          const ring = weekdayTrack(cell.track, cell.week, calendar.weekCount, counterclockwise);
-          const start = cell.week * step;
+          const ring = weekdayTrack(cell.track, cell.week, calendar.weekCount, counterclockwise, januaryAtBottom);
+          const start = angleOffset + cell.week * step;
           return <path key={cell.key} d={arcCell(INNER + ring * TRACK, INNER + (ring + 1) * TRACK, start, start + step)} />;
         })}
       </g>

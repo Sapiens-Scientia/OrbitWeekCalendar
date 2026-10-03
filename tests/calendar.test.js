@@ -40,17 +40,27 @@ test('ISO week numbers match year boundary and reference dates', () => {
   assert.equal(isoWeek(civilDate(2024, 11, 30)), 1);
 });
 
-test('weekday positions read Monday to Sunday left to right in either orbit direction', () => {
+test("January flips between top and bottom while weekdays keep their reading order in both directions", () => {
   for (const weekCount of [53, 54]) {
     for (const counterclockwise of [false, true]) {
-      for (let week = 0; week < weekCount; week++) {
-        const angle = (week + .5) * Math.PI * 2 / weekCount * (counterclockwise ? -1 : 1);
-        const rings = Array.from({ length: 7 }, (_, track) => weekdayTrack(track, week, weekCount, counterclockwise));
-        assert.equal(new Set(rings).size, 7);
-        const xs = rings.map(ring => point(175 + 30 * (ring + .5), angle)[0]);
-        for (let track = 1; track < 7; track++) assert.ok(xs[track] >= xs[track - 1] - 1e-9);
-        for (let track = 0; track < 7; track++) {
-          assert.equal(weekdayTrack(rings[track], week, weekCount, counterclockwise), track);
+      for (const januaryAtBottom of [false, true]) {
+        const step = (counterclockwise ? -1 : 1) * Math.PI * 2 / weekCount;
+        const offset = januaryAtBottom ? Math.PI : 0;
+        const januaryY = point(190, offset + step / 2)[1];
+        assert.equal(januaryY > 450, januaryAtBottom);
+        for (let week = 0; week < weekCount; week++) {
+          const angle = offset + (week + 0.5) * step;
+          const rings = Array.from({ length: 7 }, (_, track) =>
+            weekdayTrack(track, week, weekCount, counterclockwise, januaryAtBottom),
+          );
+          assert.equal(new Set(rings).size, 7);
+          const xs = rings.map(ring => point(175 + 30 * (ring + 0.5), angle)[0]);
+          for (let track = 1; track < 7; track++) {
+            assert.ok(xs[track] >= xs[track - 1] - 1e-9);
+          }
+          for (let track = 0; track < 7; track++) {
+            assert.equal(weekdayTrack(rings[track], week, weekCount, counterclockwise, januaryAtBottom), track);
+          }
         }
       }
     }

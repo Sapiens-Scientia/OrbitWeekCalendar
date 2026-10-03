@@ -10,6 +10,7 @@ An interactive annual calendar inspired by Earth's orbit around the Sun.
 - Each quarter has a seasonal palette: winter blues (January–March), spring greens (April–June), summer golds (July–September), and autumn clay (October–December). Weekends use a deeper shade within each palette.
 - The year moves counterclockwise by default from January at the top, with month labels around the rim.
 - Use the direction button in the bottom-left corner to switch between clockwise and counterclockwise.
+- Use **Jan 1 at bottom** to turn the ring by half a revolution. Month names, date numbers, and season labels stay upright, and each spoke still reads Monday to Sunday from left to right. Toggle it off to restore January to the top.
 - Select a date to see its week. Use the year arrows or Today to navigate.
 - Jump to any of the five years before or after the displayed year using the header timeline, or choose a year from the dropdown (1900–2200). On narrow screens, swipe the timeline to see more years.
 - Focus the selected date and use left/right arrows to move by a week; up/down arrows move by a day. Home/End move to Monday/Sunday within the displayed year.

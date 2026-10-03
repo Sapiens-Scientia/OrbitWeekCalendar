@@ -7,6 +7,7 @@ import { OrbitMark } from './components/Icons.jsx';
 export default function App() {
   const today = localToday();
   const [selected, setSelected] = useState(today);
+  const [januaryAtBottom, setJanuaryAtBottom] = useState(false);
   const year = selected.getUTCFullYear();
   const calendar = useMemo(() => calendarYear(year), [year]);
   const seasons = useMemo(() => seasonEvents(year), [year]);
@@ -34,6 +35,6 @@ export default function App() {
         <button className="today-button" onClick={() => setSelected(localToday())}>Today</button>
       </nav>
     </header>
-    <main><OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} /></main>
+    <main><OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} januaryAtBottom={januaryAtBottom} onToggleJanuaryPosition={() => setJanuaryAtBottom(value => !value)} /></main>
   </div>;
 }

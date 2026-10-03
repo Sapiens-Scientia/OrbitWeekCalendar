@@ -55,9 +55,10 @@ export function point(radius, angle) {
 
 // Reading each spoke from left to right gives Monday through Sunday on both halves.
 // This reversal is its own inverse, so it also maps a radial ring back to a weekday.
-export function weekdayTrack(track, week, weekCount, counterclockwise = false) {
+export function weekdayTrack(track, week, weekCount, counterclockwise = false, januaryAtBottom = false) {
   const secondHalf = week >= Math.floor(weekCount / 2);
-  return secondHalf !== counterclockwise ? 6 - track : track;
+  const reversed = secondHalf !== counterclockwise;
+  return reversed !== januaryAtBottom ? 6 - track : track;
 }
 
 export function arcCell(inner, outer, start, end) {

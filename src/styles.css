@@ -43,7 +43,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; pa
 .orbit-direction-button span { font-size: 20px; line-height: 1; }
 .calendar-direction-control { position: fixed; left: max(18px, env(safe-area-inset-left)); bottom: max(18px, env(safe-area-inset-bottom)); }
 .orbit-direction-button:hover { background: #e8eade; }
-.fade-past-control[aria-pressed='true'] { background: #e8eade; border-color: #35594d; }
+.fade-past-control[aria-pressed='true'], .january-position-control[aria-pressed='true'] { background: #e8eade; border-color: #35594d; }
 .past-week { opacity: .35; }
 .past-week:hover, .past-week:focus-within { opacity: 1; }
 .orbit-zoom-button { display: none; }
