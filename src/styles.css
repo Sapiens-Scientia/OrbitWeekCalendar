@@ -51,9 +51,11 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; pa
 .day-cell { stroke: #899589; stroke-width: .5; transition: filter .12s, fill .12s; }
 .day-cell[role='button'] { cursor: pointer; }
 .day-cell[role='button']:hover { filter: brightness(.9); stroke: #35594d; stroke-width: 1.2; }
-.active-week-outline { fill: none; stroke: #527b9a; stroke-width: 1.6; pointer-events: none; }
+.active-week-outline { fill: none; stroke: #527b9a; stroke-width: 1.4; pointer-events: none; }
 .day-cell:focus-visible { outline: none; stroke: #1b3027; stroke-width: 2.5; }
 .day-cell.outside { stroke: #cbd0c4; }
+.weekday-grid-divider { fill: none; stroke: #506858; stroke-width: .9; pointer-events: none; }
+.weekday-grid-divider.is-weekend { stroke: #354f41; stroke-width: 1.2; }
 .orbit-week-number { font: 8.5px 'DM Sans', sans-serif; font-variant-numeric: tabular-nums; text-anchor: middle; fill: #728174; }
 .orbit-week-number.is-selected { fill: #35594d; font-weight: 600; }
 .season-date-circle { fill: none; stroke: #a27330; stroke-width: 1.5; pointer-events: none; }
@@ -69,6 +71,22 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; pa
 .season-detail span { white-space: nowrap; }
 .day-number { font: 9px 'DM Sans', sans-serif; text-anchor: middle; pointer-events: none; fill: #293b36; font-variant-numeric: tabular-nums; }
 .selected-number { fill: #fff; font-weight: 600; }
+.ring-event-badge { cursor: pointer; outline: none; }
+.ring-event-box { fill: color-mix(in srgb, var(--event-color) 24%, #fffdf8); stroke: var(--event-color); stroke-width: .7; }
+.ring-event-box.is-selected { stroke-width: 1.3; }
+.ring-event-span:hover .ring-event-box, .ring-event-span:focus-within .ring-event-box { fill: color-mix(in srgb, var(--event-color) 38%, #fffdf8); stroke-width: 1.5; }
+.ring-event-box { pointer-events: none; }
+.ring-event-hit-area { fill: transparent; }
+.ring-event-badge:focus-visible .ring-event-hit-area { stroke: #1b3027; stroke-width: 1; }
+.ring-event-label { font: 6px 'DM Sans', sans-serif; text-anchor: middle; fill: #1b3027; pointer-events: none; }
+.ring-event-count { font: 4.5px 'DM Sans', sans-serif; text-anchor: middle; fill: #293b36; pointer-events: none; }
+.day-number.ring-event-day-number { font-size: 8px; fill: #293b36; }
+.ring-event-status { text-align: center; }
+.ring-event-choices { display: grid; gap: 6px; margin: 18px 0 0; }
+.ring-event-choice { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--rule); border-radius: 6px; background: transparent; text-align: left; font-size: 14px; }
+.ring-event-choice:hover { background: #e8eade; }
+.ring-event-choice span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.ring-event-choice small { display: block; font-size: 11px; color: #66766b; margin-top: 5px; }
 .month-outline { fill: none; stroke: #435c4f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 .month-marker text { font-family: var(--serif); font-size: 12px; letter-spacing: 1.7px; text-anchor: middle; fill: #293b36; }
 .calendar-canvas { position: relative; container-type: inline-size; }

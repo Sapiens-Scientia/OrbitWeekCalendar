@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { addDays, dateKey, startOfWeek } from './calendar.js';
-import { GOOGLE_SCOPES, calendarName, calendarRequest, eventPath, listCalendars, listRangeEvents, loadGoogleIdentity, sortEvents } from './googleCalendar.js';
+import { GOOGLE_SCOPES, calendarName, calendarRequest, eventPath, listCalendars, listRangeEvents, listYearAllDayEvents, loadGoogleIdentity, sortEvents } from './googleCalendar.js';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
 const SELECTION_KEY = 'orbit.calendar-selection.v1';
@@ -19,6 +19,10 @@ export default function useGoogleCalendar(selected) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [events, setEvents] = useState([]);
   const [loadedWeek, setLoadedWeek] = useState(null);
+  const [yearEvents, setYearEvents] = useState([]);
+  const [loadedYear, setLoadedYear] = useState(null);
+  const [loadingYearEvents, setLoadingYearEvents] = useState(false);
+  const [yearEventErrors, setYearEventErrors] = useState([]);
   const [loadingCalendars, setLoadingCalendars] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -29,6 +33,7 @@ export default function useGoogleCalendar(selected) {
   const expiryRef = useRef(null);
   const sessionRef = useRef(0);
   const key = dateKey(startOfWeek(selected));
+  const year = selected.getUTCFullYear();
 
   function clearSession(message = '') {
     sessionRef.current += 1;
@@ -38,6 +43,10 @@ export default function useGoogleCalendar(selected) {
     setSelectedIds([]);
     setEvents([]);
     setLoadedWeek(null);
+    setYearEvents([]);
+    setLoadedYear(null);
+    setLoadingYearEvents(false);
+    setYearEventErrors([]);
     setLoadingCalendars(false);
     setLoadingEvents(false);
     setCalendarError('');
@@ -135,6 +144,26 @@ export default function useGoogleCalendar(selected) {
     return () => controller.abort();
   }, [token, calendars, selectedIds, key, revision]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    setYearEvents([]);
+    setLoadedYear(null);
+    setYearEventErrors([]);
+    const chosen = calendars.filter(calendar => selectedIds.includes(calendar.id));
+    if (!token || !chosen.length) { setLoadingYearEvents(false); return; }
+    setLoadingYearEvents(true);
+    Promise.allSettled(chosen.map(calendar => listYearAllDayEvents(token, calendar, year, controller.signal))).then(results => {
+      if (controller.signal.aborted) return;
+      const expired = results.find(result => result.status === 'rejected' && result.reason.status === 401);
+      if (expired) { clearSession(expired.reason.message); return; }
+      setYearEvents(sortEvents(results.flatMap(result => result.status === 'fulfilled' ? result.value : [])));
+      setLoadedYear(year);
+      setYearEventErrors(results.flatMap((result, index) => result.status === 'rejected' ? [`${calendarName(chosen[index])}: ${result.reason.message}`] : []));
+      setLoadingYearEvents(false);
+    });
+    return () => controller.abort();
+  }, [token, calendars, selectedIds, year, revision]);
+
   function toggleCalendar(id) {
     const next = selectedIds.includes(id) ? selectedIds.filter(value => value !== id) : [...selectedIds, id];
     setSelectedIds(next);
@@ -165,6 +194,7 @@ export default function useGoogleCalendar(selected) {
     configured: Boolean(CLIENT_ID), ready: Boolean(oauth), connected: Boolean(token), connecting,
     calendars, selectedIds, events: loadedWeek === key ? events : [], loadingCalendars,
     loadingEvents: loadingEvents || Boolean(token && selectedIds.length && loadedWeek !== key),
+    yearEvents: loadedYear === year ? yearEvents : [], loadingYearEvents, yearEventErrors,
     authError, calendarError, eventErrors, connect,
     disconnect: () => clearSession(), toggleCalendar, writeEvent,
     refresh: () => setRevision(value => value + 1),

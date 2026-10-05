@@ -1,4 +1,4 @@
-import { addDays, dateKey } from './calendar.js';
+import { addDays, civilDate, dateKey } from './calendar.js';
 
 export const GOOGLE_SCOPES = [
   'https://www.googleapis.com/auth/calendar.calendarlist.readonly',
@@ -102,6 +102,11 @@ export async function listRangeEvents(token, calendar, start, end, signal) {
     singleEvents: true, orderBy: 'startTime', maxResults: 2500,
   }, signal);
   return items.filter(event => event.status !== 'cancelled').map(event => ({ ...event, calendar }));
+}
+
+export async function listYearAllDayEvents(token, calendar, year, signal) {
+  const events = await listRangeEvents(token, calendar, civilDate(year, 0, 1), civilDate(year + 1, 0, 1), signal);
+  return events.filter(event => event.start?.date && event.end?.date);
 }
 
 export function sortEvents(events) {
