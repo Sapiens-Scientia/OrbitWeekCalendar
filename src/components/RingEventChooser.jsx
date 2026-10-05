@@ -14,7 +14,7 @@ export default function RingEventChooser({ day, events, onChoose, onClose }) {
     <div className="schedule-section-heading"><h2 id="ring-chooser-title">{formatDate(day, { month: 'long', day: 'numeric' })}</h2><button className="schedule-text-button" onClick={onClose}>Close</button></div>
     <p className="schedule-muted">All-day events</p>
     <div className="ring-event-choices">{events.map(event => <button key={`${event.calendar.id}:${event.id}`} className="ring-event-choice" onClick={() => onChoose(event)}>
-      <span className="calendar-color" style={{ background: event.calendar.backgroundColor || '#35594d' }} />
+      <span className="calendar-color" style={{ background: event.calendar.backgroundColor || 'var(--accent)' }} />
       <span>{eventTitle(event)}<small>{calendarName(event.calendar)}{!canWriteCalendar(event.calendar) ? ' · Read only' : ''}</small></span>
     </button>)}</div>
   </dialog>;

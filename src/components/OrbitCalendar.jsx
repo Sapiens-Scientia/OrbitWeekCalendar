@@ -1,12 +1,10 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { addDays, arcCell, changeYear, dateKey, dayOfYear, formatDate, isoWeek, point, quarterFill, startOfWeek, weekdayTrack } from '../calendar.js';
+import { addDays, arcCell, changeYear, dateKey, dayOfYear, formatDate, isoWeek, point, quarterFill, RING_INNER as INNER, RING_TRACK as TRACK, startOfWeek, weekdayTrack } from '../calendar.js';
 import { Chevron, Sun } from './Icons.jsx';
 import { allDayEventsByDate, allDayEventSpans, compactEventLabel, radialEventBox, radialEventHitArea, radialEventDatePosition } from '../ringEvents.js';
 import { calendarName } from '../googleCalendar.js';
 import { eventTitle } from '../schedule.js';
 
-const INNER = 175;
-const TRACK = 30;
 const TAU = Math.PI * 2;
 const YEAR_GAP = .012;
 
@@ -119,7 +117,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
           <path
             ref={node => { if (node) cellRefs.current.set(key, node); else cellRefs.current.delete(key); }}
             d={arcCell(INNER + radialTrack * TRACK, INNER + (radialTrack + 1) * TRACK, start, end)}
-            fill={isSelected ? '#35594d' : inYear ? quarterFill(date) : '#f6f4ed'}
+            fill={isSelected ? 'var(--accent)' : inYear ? quarterFill(date) : 'var(--paper)'}
             className={`day-cell${isSelected ? ' selected' : ''}${!inYear ? ' outside' : ''}`}
             data-date={key}
             role={inYear ? 'button' : undefined}
@@ -161,21 +159,19 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         return <g key={cells[0].key} className={`ring-event-span${faded ? ' past-week' : ''}`} data-event-id={event.id} data-calendar-id={event.calendar.id}
           data-start={cells[0].key} data-end={cells.at(-1).key}>
           <path className={`ring-event-box${isSelected ? ' is-selected' : ''}`} d={box.path}
-            transform={`translate(${box.x} ${box.y}) rotate(${box.rotation})`} style={{ '--event-color': event.calendar.backgroundColor || '#35594d' }} />
+            transform={`translate(${box.x} ${box.y}) rotate(${box.rotation})`} style={{ '--event-color': event.calendar.backgroundColor || 'var(--accent)' }} />
           {cells.map((cell, index) => {
             const dayEvents = eventsByDate.get(cell.key);
             const eventLabel = dayEvents.map(item => `${eventTitle(item)} (${calendarName(item.calendar)})`).join('; ');
             const openDayEvents = () => { onSelect(cell.date); onDayEvents(cell.date, dayEvents); };
             const cellInner = INNER + rings[index] * TRACK, cellOuter = cellInner + TRACK;
             const hitInner = Math.max(cellInner, inner + 2), hitOuter = Math.min(cellOuter, outer - 2);
-            const position = eventPositions.get(cell.key);
             return <g key={cell.key} className="ring-event-badge" data-date={cell.key} role="button" tabIndex={0}
               aria-label={`All-day events on ${formatDate(cell.date, { month: 'long', day: 'numeric', year: 'numeric' })}: ${eventLabel}`}
               onClick={openDayEvents} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDayEvents(); } else navigate(e, cell.date); }}>
               <title>{eventLabel}</title>
               <path className="ring-event-hit-area" d={radialEventHitArea(box, hitInner, hitOuter)}
                 transform={`translate(${box.x} ${box.y}) rotate(${box.rotation})`} />
-              {dayEvents.length > 1 && <text className="ring-event-count" x={position.countX} y={position.countY} dy=".35em" aria-hidden="true">+{dayEvents.length - 1}</text>}
             </g>;
           })}
           <text className="ring-event-label" x={box.labelX} y={box.labelY} dy=".35em" style={{ fontSize: box.labelFontSize }}
@@ -191,7 +187,8 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         return <g key={key} className={fadePast && date < currentWeekStart && !isSelected ? 'past-week' : undefined} aria-hidden="true">
           {seasons.some(event => event.key === key) && <circle cx={numberX} cy={numberY} r={position ? position.fontSize < 8 ? 5 : 6.5 : 9} className={`season-date-circle${isSelected && !dayEvents ? ' is-selected' : ''}`} />}
           <text x={numberX} y={numberY} dy=".35em" style={position ? { fontSize: position.fontSize } : undefined} className={`day-number${dayEvents ? ' ring-event-day-number' : ''}${isSelected ? ' selected-number' : ''}`}>{date.getUTCDate()}</text>
-          {key === todayKey && <circle cx={position?.todayX ?? x} cy={position?.todayY ?? y + 8} r="1.5" fill={dayEvents ? '#35594d' : isSelected ? '#fff' : '#35594d'} pointerEvents="none" />}
+          {dayEvents?.length > 1 && <text className={`ring-event-count${isSelected ? ' selected-number' : ''}`} data-date={key} x={position.countX} y={position.countY} dy=".35em">+{dayEvents.length - 1}</text>}
+          {key === todayKey && <circle cx={position?.todayX ?? x} cy={position?.todayY ?? y + 8} r="1.5" fill={isSelected ? 'var(--on-accent)' : 'var(--accent)'} pointerEvents="none" />}
         </g>;
       })}
       <path className="year-seam" d={`M ${point(INNER, angleOffset)} L ${point(INNER + TRACK * 7, angleOffset)} M ${point(INNER, endAngle)} L ${point(INNER + TRACK * 7, endAngle)}`} aria-hidden="true" />

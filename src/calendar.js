@@ -1,13 +1,15 @@
 // UTC civil dates keep calendar arithmetic independent of daylight saving changes.
 export const DAY = 86_400_000;
+export const RING_INNER = 175;
+export const RING_TRACK = 30;
 export const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-export const COLORS = ['#e5ddca', '#e5ddca', '#e5ddca', '#e5ddca', '#e5ddca', '#dfbf6c', '#dfbf6c'];
-export const FILLS = ['#f1ecdf', '#f1ecdf', '#f1ecdf', '#f1ecdf', '#f1ecdf', '#efe4c1', '#efe4c1'];
+export const COLORS = Array.from({ length: 7 }, (_, day) => day < 5 ? 'var(--legend-day)' : 'var(--summer-weekend)');
+export const FILLS = Array.from({ length: 7 }, (_, day) => day < 5 ? 'var(--legend-fill)' : 'var(--legend-weekend-fill)');
 export const QUARTER_PALETTES = [
-  { weekday: '#e0e9ed', weekend: '#afc8d5' }, // Winter: frost and blue slate.
-  { weekday: '#e3ead8', weekend: '#bdd09f' }, // Spring: young leaves and sage.
-  { weekday: '#f2e4bc', weekend: '#dfc579' }, // Summer: sunlight and golden fields.
-  { weekday: '#efdbcb', weekend: '#d5a980' }, // Autumn: warm clay and fallen leaves.
+  { weekday: 'var(--winter-day)', weekend: 'var(--winter-weekend)' }, // Frost and blue slate.
+  { weekday: 'var(--spring-day)', weekend: 'var(--spring-weekend)' }, // Young leaves and sage.
+  { weekday: 'var(--summer-day)', weekend: 'var(--summer-weekend)' }, // Sunlight and golden fields.
+  { weekday: 'var(--autumn-day)', weekend: 'var(--autumn-weekend)' }, // Warm clay and fallen leaves.
 ];
 export const quarterFill = date => {
   const palette = QUARTER_PALETTES[Math.floor(date.getUTCMonth() / 3)];

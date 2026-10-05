@@ -1,4 +1,4 @@
-import { addDays, civilDate, dateKey } from './calendar.js';
+import { addDays, civilDate, dateKey, RING_INNER } from './calendar.js';
 
 // All-day end dates are exclusive. Clip long events to the displayed year before
 // expanding them, so an event spanning years can't generate unbounded cells.
@@ -60,34 +60,39 @@ function taperedCorners(inner, outer, center, tangent) {
     [innerWidth / 2, center - inner], [-innerWidth / 2, center - inner]];
 }
 
-// Rounded trapezoids follow the widening spoke. Titles read along the radial
-// axis in weekday order, while date numbers keep their screen orientation.
+// Reserve the upper third of the spoke in the title's reading direction,
+// using the same angular lane for every event. Size it for the innermost cell
+// so single-day and joined strips share edges at every radius.
 export function radialEventBox(inner, outer, start, end, outward = true) {
-  const angle = (start + end) / 2;
+  const spokeAngle = (start + end) / 2;
+  const spokeWidth = Math.abs(end - start);
+  const spokeTangent = Math.tan(spokeWidth / 2);
+  const labelFontSize = 2 * (inner + 2) * spokeTangent - 3 < 24 ? 5.5 : 6;
+  const minimumFontSize = 2 * (RING_INNER + 2) * spokeTangent - 3 < 24 ? 5.5 : 6;
+  const titleHeight = minimumFontSize + 3;
+  const stripAngle = Math.max(spokeWidth / 3, 2 * Math.atan((titleHeight + 3) / (2 * (RING_INNER + 2))));
+  const upperSide = outward ? -1 : 1;
+  const angle = spokeAngle + upperSide * (spokeWidth - stripAngle) / 2;
   const radius = (inner + outer) / 2;
   const length = outer - inner - 4;
-  const tangent = Math.tan(Math.abs(end - start) / 2);
+  const tangent = Math.tan(stripAngle / 2);
   const localCorners = taperedCorners(inner + 2, outer - 2, radius, tangent);
   const innerWidth = localCorners[2][0] * 2, outerWidth = localCorners[1][0] * 2;
   const rotation = angle * 180 / Math.PI;
   const x = 450 + radius * Math.sin(angle), y = 450 - radius * Math.cos(angle);
-  const labelFontSize = innerWidth < 24 ? 5.5 : 6;
-  const labelTangent = (outward ? -1 : 1) * (innerWidth / 2 - 3.25);
-  return { x, y, radius, tangent, innerWidth, outerWidth, length, rotation, outward, corners: localCorners,
+  return { x, y, radius, tangent, spokeAngle, spokeWidth, stripAngle, innerWidth, outerWidth, length, rotation, outward, corners: localCorners,
     path: roundedPolygon(localCorners, 2.5), labelFontSize, labelWidth: length - 8,
-    labelX: x + labelTangent * Math.cos(angle), labelY: y + labelTangent * Math.sin(angle),
+    labelX: x, labelY: y,
     labelRotation: rotation + (outward ? -90 : 90) };
 }
 
 export function radialEventDatePosition(box, radius) {
-  const angle = box.rotation * Math.PI / 180;
-  const width = 2 * radius * box.tangent - 3;
-  const fontSize = width < 24 ? 6.5 : 8;
-  // Reserve a separate lane beside the title for horizontal date numbers.
-  const projectedHalfSize = fontSize * .57 * (Math.abs(Math.cos(angle)) + Math.abs(Math.sin(angle)));
-  const offset = (box.outward ? 1 : -1) * Math.min(5, width / 2 - projectedHalfSize - 1);
-  const x = 450 + radius * Math.sin(angle) + offset * Math.cos(angle);
-  const y = 450 - radius * Math.cos(angle) + offset * Math.sin(angle);
+  const angle = box.spokeAngle + (box.outward ? 1 : -1) * box.stripAngle / 2;
+  const width = 2 * radius * Math.tan((box.spokeWidth - box.stripAngle) / 2);
+  const projection = Math.abs(Math.cos(angle)) + Math.abs(Math.sin(angle));
+  const fontSize = Math.min(8, (width - 1) / (1.14 * projection));
+  const x = 450 + radius * Math.sin(angle);
+  const y = 450 - radius * Math.cos(angle);
   const direction = box.outward ? 1 : -1;
   return { x, y, fontSize,
     countX: x + direction * 9 * Math.sin(angle), countY: y - direction * 9 * Math.cos(angle),

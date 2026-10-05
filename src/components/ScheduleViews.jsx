@@ -40,7 +40,7 @@ function CurrentTimeMarker({ day, now, vertical = false }) {
 
 function EventButton({ event, className = '', style, onClick, children }) {
   const label = `${eventTitle(event)}, ${eventTimeLabel(event)}, ${calendarName(event.calendar)}`;
-  return <button className={`timeline-event ${className}`} style={{ '--event-color': event.calendar.backgroundColor || '#35594d', ...style }}
+  return <button className={`timeline-event ${className}`} style={{ '--event-color': event.calendar.backgroundColor || 'var(--accent)', ...style }}
     aria-label={label} title={label} onClick={onClick}>{children || eventTitle(event)}</button>;
 }
 

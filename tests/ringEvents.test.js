@@ -50,7 +50,7 @@ test('spans distinguish calendar and event IDs and preserve gaps and day-specifi
   assert.deepEqual(allDayEventSpans(weeks, dates).map(span => span.cells.length), [1, 1, 1, 1]);
 });
 
-test('rounded tapered boxes widen outward and fit inside cells in every orientation', () => {
+test('rounded event strips widen outward, fit their text, and leave the lower cell exposed in every orientation', () => {
   for (const direction of [-1, 1]) for (const bottom of [0, Math.PI]) for (const weeks of [53, 54]) for (let week = 0; week < weeks; week++) for (let ring = 0; ring < 7; ring++) {
     const step = direction * Math.PI * 2 / weeks, start = bottom + week * step;
     const inner = 175 + ring * 30, outer = inner + 30;
@@ -60,11 +60,13 @@ test('rounded tapered boxes widen outward and fit inside cells in every orientat
     assert(box.labelWidth > 0);
     assert(Math.abs(Math.hypot(box.x - 450, box.y - 450) - (inner + outer) / 2) < 1e-8);
     assert(box.outerWidth > box.innerWidth);
+    assert(box.stripAngle >= Math.abs(step) / 3 - 1e-8 && box.stripAngle < Math.abs(step) * .57);
+    assert(box.innerWidth >= box.labelFontSize + 3 - 1e-8);
     assert(box.path.includes('Q'));
     for (const [tangent, localY] of box.corners) {
       const radial = -localY;
       const radius = Math.hypot((inner + outer) / 2 + radial, tangent);
-      const angle = Math.atan2(tangent, (inner + outer) / 2 + radial);
+      const angle = Math.atan2(tangent, (inner + outer) / 2 + radial) + box.rotation * Math.PI / 180 - box.spokeAngle;
       assert(radius > inner && radius < outer);
       assert(Math.abs(angle) < Math.abs(step) / 2);
     }
@@ -82,17 +84,24 @@ test('joined boxes fit inside their spoke; radial titles follow weekday order in
     assert(Number.isFinite(box.labelX) && Number.isFinite(box.labelY) && box.labelWidth > 0);
     const labelAngle = box.labelRotation * Math.PI / 180;
     const chronologicalX = (outward ? 1 : -1) * Math.sin(angle), chronologicalY = (outward ? -1 : 1) * Math.cos(angle);
-    assert(Math.cos(labelAngle) * chronologicalX + Math.sin(labelAngle) * chronologicalY > .999999);
+    assert(Math.cos(labelAngle) * chronologicalX + Math.sin(labelAngle) * chronologicalY > .998);
+    const titleAngle = box.rotation * Math.PI / 180;
+    assert(Math.cos(labelAngle) * (outward ? 1 : -1) * Math.sin(titleAngle) + Math.sin(labelAngle) * (outward ? -1 : 1) * Math.cos(titleAngle) > .999999);
     for (const [tangent, localY] of box.corners) {
       const radius = Math.hypot(box.radius - localY, tangent);
       assert(radius > inner && radius < outer);
-      assert(Math.abs(Math.atan2(tangent, box.radius - localY)) < Math.abs(step) / 2);
+      assert(Math.abs(Math.atan2(tangent, box.radius - localY) + titleAngle - angle) < Math.abs(step) / 2);
     }
     for (let day = 0; day < days; day++) {
       const radius = inner + (day + .5) * 30;
       const position = radialEventDatePosition(box, radius);
       assert(Number.isFinite(position.x) && Number.isFinite(position.y));
-      assert(position.fontSize >= 6.5);
+      assert(position.fontSize >= 5);
+      const dateAngle = Math.atan2(position.x - 450, 450 - position.y);
+      const normalized = angle => Math.atan2(Math.sin(angle), Math.cos(angle));
+      assert(Math.abs(normalized(dateAngle - angle)) < Math.abs(step) / 2);
+      // The date's center must select the day rather than the event strip.
+      assert(Math.abs(normalized(dateAngle - titleAngle)) > box.stripAngle / 2);
       const from = Math.max(inner + day * 30, inner + 2), until = Math.min(inner + (day + 1) * 30, outer - 2);
       const hit = radialEventHitArea(box, from, until);
       const vertices = hit.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/g).map(Number);
@@ -101,6 +110,32 @@ test('joined boxes fit inside their spoke; radial titles follow weekday order in
         assert(r >= from - 1e-8 && r <= until + 1e-8);
         assert(Math.abs(Math.atan2(tangent, r)) < Math.abs(step) / 2);
       }
+    }
+  }
+});
+
+test('single-day and multi-day strips share both edges and date positions at every radius', () => {
+  const vertices = (box, radius) => {
+    const values = radialEventHitArea(box, radius - 3, radius + 3).match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/g).map(Number);
+    const angle = box.rotation * Math.PI / 180;
+    return Array.from({ length: values.length / 2 }, (_, i) => {
+      const [x, y] = values.slice(i * 2, i * 2 + 2);
+      return [box.x + x * Math.cos(angle) - y * Math.sin(angle), box.y + x * Math.sin(angle) + y * Math.cos(angle)];
+    });
+  };
+  for (const weeks of [53, 54]) for (const direction of [-1, 1]) for (const bottom of [false, true]) for (let week = 0; week < weeks; week++) {
+    const step = direction * (Math.PI * 2 - .012) / weeks;
+    const start = (bottom ? Math.PI : 0) + direction * .006 + week * step;
+    const outward = weekdayTrack(0, week, weeks, direction < 0, bottom) < weekdayTrack(6, week, weeks, direction < 0, bottom);
+    const joined = radialEventBox(175, 385, start, start + step, outward);
+    for (let day = 0; day < 7; day++) {
+      const inner = 175 + day * 30, radius = inner + 15;
+      const single = radialEventBox(inner, inner + 30, start, start + step, outward);
+      assert.equal(single.stripAngle, joined.stripAngle);
+      assert.equal(single.rotation, joined.rotation);
+      assert.deepEqual(radialEventDatePosition(single, radius), radialEventDatePosition(joined, radius));
+      const a = vertices(single, radius), b = vertices(joined, radius);
+      assert(a.every(([x, y], i) => Math.hypot(x - b[i][0], y - b[i][1]) < 1e-8));
     }
   }
 });

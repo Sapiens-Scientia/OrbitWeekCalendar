@@ -20,7 +20,7 @@ export default function CalendarSettings({ google, onClose }) {
           {google.loadingCalendars && <p className="schedule-muted" role="status">Loading calendars…</p>}
           {google.calendars.map(calendar => <label key={calendar.id} className="calendar-choice">
             <input type="checkbox" checked={google.selectedIds.includes(calendar.id)} onChange={() => google.toggleCalendar(calendar.id)} />
-            <span className="calendar-color" style={{ backgroundColor: calendar.backgroundColor || '#35594d' }} />
+            <span className="calendar-color" style={{ backgroundColor: calendar.backgroundColor || 'var(--accent)' }} />
             <span>{calendarName(calendar)}{!canWriteCalendar(calendar) && <small>Read only</small>}</span>
           </label>)}
           {!google.loadingCalendars && !google.calendars.length && !google.calendarError && <p className="schedule-muted">No calendars are available for this account.</p>}
