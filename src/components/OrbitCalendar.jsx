@@ -1,6 +1,7 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { addDays, arcCell, changeYear, dateKey, dayOfYear, formatDate, isoWeek, point, quarterFill, RING_INNER as INNER, RING_TRACK as TRACK, startOfWeek, weekdayTrack } from '../calendar.js';
-import { Chevron, Sun } from './Icons.jsx';
+import { addDays, arcCell, dateKey, dayOfYear, formatDate, isoWeek, point, monthFill, RING_INNER as INNER, RING_TRACK as TRACK, startOfWeek, weekdayTrack } from '../calendar.js';
+import { Sun } from './Icons.jsx';
+import YearNavigation from './YearNavigation.jsx';
 import { allDayEventsByDate, allDayEventSpans, compactEventLabel, radialEventBox, radialEventHitArea, radialEventDatePosition } from '../ringEvents.js';
 import { calendarName } from '../googleCalendar.js';
 import { eventTitle } from '../schedule.js';
@@ -117,7 +118,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
           <path
             ref={node => { if (node) cellRefs.current.set(key, node); else cellRefs.current.delete(key); }}
             d={arcCell(INNER + radialTrack * TRACK, INNER + (radialTrack + 1) * TRACK, start, end)}
-            fill={isSelected ? 'var(--accent)' : inYear ? quarterFill(date) : 'var(--paper)'}
+            fill={isSelected ? 'var(--accent)' : inYear ? monthFill(date) : 'var(--paper)'}
             className={`day-cell${isSelected ? ' selected' : ''}${!inYear ? ' outside' : ''}`}
             data-date={key}
             role={inYear ? 'button' : undefined}
@@ -241,17 +242,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         <text x="450" y="533" className="center-progress">Day {dayOfYear(selected)} of {calendar.dayCount} · Week {isoWeek(selected)}</text>
       </g>
     </svg>
-        <div className="center-year-controls">
-          <button className="icon-button" aria-label="Previous year" disabled={calendar.year <= 1900} onClick={() => onSelect(changeYear(selected, calendar.year - 1))}><Chevron direction="left" /></button>
-          <div className="center-year-picker">
-            <span className="center-year" aria-hidden="true">{calendar.year}</span>
-            <select className="center-year-select" aria-label="Displayed year" value={calendar.year} onChange={event => onSelect(changeYear(selected, Number(event.target.value)))}>
-              {Array.from({ length: 301 }, (_, index) => 1900 + index).map(year => <option key={year} value={year}>{year}</option>)}
-            </select>
-            <span className="year-picker-chevron" aria-hidden="true">⌄</span>
-          </div>
-          <button className="icon-button" aria-label="Next year" disabled={calendar.year >= 2200} onClick={() => onSelect(changeYear(selected, calendar.year + 1))}><Chevron /></button>
-        </div>
+        <YearNavigation selected={selected} onSelect={onSelect} inRing />
     </div>
     </div>
     <button className="orbit-zoom-button" aria-pressed={zoomed} onClick={() => setZoomed(value => !value)}>{zoomed ? 'Show full orbit' : 'Enlarge dates'}</button>

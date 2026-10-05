@@ -8,6 +8,9 @@ import CalendarSettings from './components/CalendarSettings.jsx';
 import EventEditor from './components/EventEditor.jsx';
 import RingEventChooser from './components/RingEventChooser.jsx';
 import useGoogleCalendar from './useGoogleCalendar.js';
+import { canWriteCalendar } from './googleCalendar.js';
+import CalendarSection from './components/CalendarSection.jsx';
+import YearNavigation from './components/YearNavigation.jsx';
 
 export default function App() {
   const today = localToday();
@@ -15,6 +18,7 @@ export default function App() {
   const [januaryAtBottom, setJanuaryAtBottom] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [ringEditor, setRingEditor] = useState(null);
+  const [newEventDay, setNewEventDay] = useState(null);
   const [ringNotice, setRingNotice] = useState('');
   const google = useGoogleCalendar(selected);
   const year = selected.getUTCFullYear();
@@ -22,7 +26,8 @@ export default function App() {
   const seasons = useMemo(() => seasonEvents(year), [year]);
   const timelineRef = useRef(null);
   const nearbyYears = Array.from({ length: 11 }, (_, index) => year + index - 5);
-  useEffect(() => { if (!google.connected) { setRingEditor(null); setRingNotice(''); } }, [google.connected]);
+  const writable = google.connected && google.calendars.some(canWriteCalendar);
+  useEffect(() => { if (!google.connected) { setRingEditor(null); setNewEventDay(null); setRingNotice(''); } }, [google.connected]);
   useEffect(() => {
     const timeline = timelineRef.current;
     const centerCurrentYear = () => {
@@ -43,20 +48,26 @@ export default function App() {
       </nav>
       <nav className="year-controls" aria-label="Calendar controls">
         <button className="today-button" onClick={() => setSelected(localToday())}>Today</button>
+        <button className="schedule-button add-event-button" disabled={!writable || google.loadingCalendars} aria-haspopup="dialog"
+          onClick={() => { setRingNotice(''); setNewEventDay(selected); }}>Add event</button>
         <button className="schedule-button settings-button" aria-label="Settings" aria-haspopup="dialog" onClick={() => setSettingsOpen(true)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9.3 3-.6 2.4-2.1 1.2-2.4-.6-2.1 3.6 1.8 1.8v2.4l-1.8 1.8 2.1 3.6 2.4-.6 2.1 1.2.6 2.2h4.2l.6-2.2 2.1-1.2 2.4.6 2.1-3.6-1.8-1.8v-2.4l1.8-1.8-2.1-3.6-2.4.6-2.1-1.2-.6-2.4z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><circle cx="11.4" cy="12.6" r="3.2" stroke="currentColor" strokeWidth="1.4" /></svg><span>Settings</span>
         </button>
       </nav>
     </header>
     <main className="calendar-workspace">
+      {ringNotice && <p className="schedule-notice" role="status">{ringNotice}</p>}
       <ScheduleViews selected={selected} onSelect={setSelected} google={google} onSettings={() => setSettingsOpen(true)} />
-      <OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} januaryAtBottom={januaryAtBottom} onToggleJanuaryPosition={() => setJanuaryAtBottom(value => !value)}
-        allDayEvents={google.yearEvents} onDayEvents={(day, events) => { setRingNotice(''); setRingEditor({ day, events, event: events.length === 1 ? events[0] : null }); }} />
-      {google.loadingYearEvents && <p className="ring-event-status schedule-muted" role="status">Loading all-day events for {year}…</p>}
-      {google.yearEventErrors.map(message => <p key={message} className="ring-event-status schedule-error" role="alert">Ring events · {message} <button className="schedule-text-button" onClick={google.refresh}>Retry</button></p>)}
-      {ringNotice && <p className="ring-event-status schedule-notice" role="status">{ringNotice}</p>}
+      <CalendarSection title="Year" className="year-calendar-section" headerContent={<YearNavigation selected={selected} onSelect={setSelected} />}>
+        <OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} januaryAtBottom={januaryAtBottom} onToggleJanuaryPosition={() => setJanuaryAtBottom(value => !value)}
+          allDayEvents={google.yearEvents} onDayEvents={(day, events) => { setRingNotice(''); setRingEditor({ day, events, event: events.length === 1 ? events[0] : null }); }} />
+        {google.loadingYearEvents && <p className="ring-event-status schedule-muted" role="status">Loading all-day events for {year}…</p>}
+        {google.yearEventErrors.map(message => <p key={message} className="ring-event-status schedule-error" role="alert">Ring events · {message} <button className="schedule-text-button" onClick={google.refresh}>Retry</button></p>)}
+      </CalendarSection>
     </main>
     {settingsOpen && <CalendarSettings google={google} onClose={() => setSettingsOpen(false)} />}
+    {newEventDay && google.connected && <EventEditor selected={newEventDay} calendars={google.calendars} selectedIds={google.selectedIds}
+      onWrite={google.writeEvent} onClose={message => { setNewEventDay(null); if (message) setRingNotice(message); }} />}
     {ringEditor && google.connected && (ringEditor.event ? <EventEditor selected={ringEditor.day} calendars={google.calendars} selectedIds={google.selectedIds} event={ringEditor.event}
       onWrite={google.writeEvent} onClose={message => { setRingEditor(null); if (message) setRingNotice(message); }} />
       : <RingEventChooser day={ringEditor.day} events={ringEditor.events} onClose={() => setRingEditor(null)} onChoose={event => setRingEditor(previous => ({ ...previous, event }))} />)}

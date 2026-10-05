@@ -11,9 +11,14 @@ export const QUARTER_PALETTES = [
   { weekday: 'var(--summer-day)', weekend: 'var(--summer-weekend)' }, // Sunlight and golden fields.
   { weekday: 'var(--autumn-day)', weekend: 'var(--autumn-weekend)' }, // Warm clay and fallen leaves.
 ];
-export const quarterFill = date => {
-  const palette = QUARTER_PALETTES[Math.floor(date.getUTCMonth() / 3)];
-  return weekday(date) < 5 ? palette.weekday : palette.weekend;
+export const monthFill = date => {
+  const month = date.getUTCMonth();
+  const quarter = Math.floor(month / 3);
+  const palette = QUARTER_PALETTES[quarter];
+  const color = weekday(date) < 5 ? palette.weekday : palette.weekend;
+  // Departing a solstice lightens the season; approaching one deepens it.
+  const strength = [100, 70, 40][quarter % 2 === 0 ? month % 3 : 2 - month % 3];
+  return `color-mix(in srgb, ${color} ${strength}%, var(--paper))`;
 };
 export const civilDate = (year, month, day) => new Date(Date.UTC(year, month, day));
 export const dateKey = (date) => date.toISOString().slice(0, 10);

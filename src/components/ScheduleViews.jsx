@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addDays, dateKey, formatDate, startOfWeek, weekday } from '../calendar.js';
-import { calendarName, canWriteCalendar } from '../googleCalendar.js';
+import { calendarName } from '../googleCalendar.js';
 import { currentTimePosition, eventTimeLabel, eventTitle, HOURS, hourLabel, layoutDay } from '../schedule.js';
 import EventEditor from './EventEditor.jsx';
 import { Chevron } from './Icons.jsx';
+import CalendarSection from './CalendarSection.jsx';
 
 const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const MIN_DATE = '1900-01-01', MAX_DATE = '2200-12-31';
@@ -108,23 +109,20 @@ export default function ScheduleViews({ selected, onSelect, google, onSettings }
   const layouts = useMemo(() => days.map(day => layoutDay(google.events, day)), [days, google.events]);
   const selectedLayout = layouts[weekday(selected)];
   const busy = google.loadingCalendars || google.loadingEvents;
-  const writable = google.connected && google.calendars.some(canWriteCalendar);
   useEffect(() => { if (!google.connected) { setEditor(null); setNotice(''); } }, [google.connected]);
   function selectDay(day) { setNotice(''); onSelect(day); }
   const previous = addDays(selected, -1), next = addDays(selected, 1);
   const previousWeek = addDays(selected, -7), nextWeek = addDays(selected, 7);
   return <div className="schedule-views" aria-busy={busy}>
-    <section className="selected-day-section" aria-labelledby="selected-day-title">
-      <header className="timeline-section-header">
-        <div className="timeline-title-navigation"><nav className="schedule-day-navigation" aria-label="Schedule day">
-          <button className="icon-button" aria-label="Previous day" disabled={!inBounds(previous)} onClick={() => selectDay(previous)}><Chevron direction="left" /></button>
-          <button className="icon-button" aria-label="Next day" disabled={!inBounds(next)} onClick={() => selectDay(next)}><Chevron /></button>
-        </nav><h1 id="selected-day-title">{formatDate(selected, { weekday: 'long', month: 'long', day: 'numeric' })}</h1></div>
-        <div className="schedule-actions"><span className="schedule-time-zone">{TIME_ZONE.replaceAll('_', ' ')}</span>
-          {google.connected && <button className="schedule-text-button" disabled={busy} onClick={() => { setNotice(''); google.refresh(); }}>Refresh</button>}
-          <button className="schedule-button" disabled={!writable || google.loadingCalendars} onClick={() => setEditor({ selected, event: null })}>Add event</button>
-        </div>
-      </header>
+    <CalendarSection title="Day" className="selected-day-section" headerContent={
+      <nav className="timeline-title-navigation" aria-label="Schedule day">
+        <button className="icon-button" aria-label="Previous day" disabled={!inBounds(previous)} onClick={() => selectDay(previous)}><Chevron direction="left" /></button>
+        <h1 id="selected-day-title"><span className="schedule-date-long">{formatDate(selected, { weekday: 'long', month: 'long', day: 'numeric' })}</span><span className="schedule-date-short">{formatDate(selected, { weekday: 'short', month: 'short', day: 'numeric' })}</span></h1>
+        <button className="icon-button" aria-label="Next day" disabled={!inBounds(next)} onClick={() => selectDay(next)}><Chevron /></button>
+      </nav>
+    } headerActions={<div className="schedule-actions"><span className="schedule-time-zone">{TIME_ZONE.replaceAll('_', ' ')}</span>
+      {google.connected && <button className="schedule-text-button" disabled={busy} onClick={() => { setNotice(''); google.refresh(); }}>Refresh</button>}
+    </div>}>
       <div className="schedule-status" aria-live="polite">
         {notice && <p className="schedule-notice">{notice}</p>}
         {!google.connected && <p className="schedule-muted">{google.authError || 'Connect your calendars to see your schedule.'} <button className="schedule-text-button" onClick={onSettings}>Open settings</button></p>}
@@ -134,17 +132,16 @@ export default function ScheduleViews({ selected, onSelect, google, onSettings }
         {google.eventErrors.map(message => <p key={message} className="schedule-error" role="alert">{message}</p>)}
       </div>
       <DayStrip day={selected} layout={selectedLayout} onEvent={event => setEditor({ selected, event })} now={now} />
-    </section>
-    <section className="week-schedule-section" aria-labelledby="week-schedule-title">
-      <header className="timeline-section-header">
-        <div className="timeline-title-navigation"><nav className="schedule-day-navigation" aria-label="Schedule week">
-          <button className="icon-button" aria-label="Previous week" disabled={!inBounds(previousWeek)} onClick={() => selectDay(previousWeek)}><Chevron direction="left" /></button>
-          <button className="icon-button" aria-label="Next week" disabled={!inBounds(nextWeek)} onClick={() => selectDay(nextWeek)}><Chevron /></button>
-        </nav><h2 id="week-schedule-title">{formatDate(days[0], { month: 'short', day: 'numeric' })} – {formatDate(days[6], { month: 'short', day: 'numeric', year: 'numeric' })}</h2></div>
-        <div className="time-shading-legend"><span><i className="night-legend" />Night · 12am–6am</span><span><i className="work-legend" />Work · Mon–Fri, 9am–5pm</span></div>
-      </header>
+    </CalendarSection>
+    <CalendarSection title="Week" className="week-schedule-section" headerContent={
+      <nav className="timeline-title-navigation" aria-label="Schedule week">
+        <button className="icon-button" aria-label="Previous week" disabled={!inBounds(previousWeek)} onClick={() => selectDay(previousWeek)}><Chevron direction="left" /></button>
+        <h3 id="week-schedule-title"><span className="schedule-date-long">{formatDate(days[0], { month: 'short', day: 'numeric' })} – {formatDate(days[6], { month: 'short', day: 'numeric', year: 'numeric' })}</span><span className="schedule-date-short">{formatDate(days[0], { month: 'short', day: 'numeric' })} – {formatDate(days[6], { month: 'short', day: 'numeric' })}</span></h3>
+        <button className="icon-button" aria-label="Next week" disabled={!inBounds(nextWeek)} onClick={() => selectDay(nextWeek)}><Chevron /></button>
+      </nav>
+    } headerActions={<div className="time-shading-legend"><span><i className="night-legend" />Night · 12am–6am</span><span><i className="work-legend" />Work · Mon–Fri, 9am–5pm</span></div>}>
       <WeekView days={days} layouts={layouts} selected={selected} onSelect={selectDay} onEvent={event => setEditor({ selected, event })} now={now} />
-    </section>
+    </CalendarSection>
     {editor && google.connected && <EventEditor selected={editor.selected} calendars={google.calendars} selectedIds={google.selectedIds} event={editor.event} onWrite={google.writeEvent} onClose={message => { setEditor(null); if (message) setNotice(message); }} />}
   </div>;
 }

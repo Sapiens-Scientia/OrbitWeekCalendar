@@ -56,7 +56,7 @@ button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-c
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 button:disabled { cursor: default; opacity: .35; }
 .app-shell { max-width: 1680px; margin: auto; padding: 0 36px; }
-.app-header { height: 56px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 24px; border-bottom: 1px solid var(--rule); }
+.app-header { position: sticky; top: 0; z-index: 10; background: var(--paper); height: 56px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 24px; border-bottom: 1px solid var(--rule); }
 .brand { display: flex; align-items: center; gap: 18px; }
 .brand-name { font-family: var(--serif); font-size: 34px; font-weight: 600; letter-spacing: -1.2px; }
 .orbit-mark { width: 34px; height: 34px; }
@@ -140,7 +140,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; pa
 .center-year-picker { position: relative; width: 16.4356cqw; height: 8.5149cqw; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
 .center-year-picker:hover { background: var(--surface-hover); }
 .center-year-picker:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
-.center-year-select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font: 16px 'DM Sans', sans-serif; }
+.year-picker-select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font: 16px 'DM Sans', sans-serif; }
 .year-picker-chevron { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 1.98cqw; pointer-events: none; color: var(--muted); }
 .center-caption { font-family: var(--serif); font-size: 19px; font-style: italic; text-anchor: middle; fill: var(--ink); }
 .center-progress { font: 11px 'DM Sans', sans-serif; text-anchor: middle; fill: var(--muted); }
@@ -312,7 +312,7 @@ main { display: flex; justify-content: center; padding: 6px 0 48px; }
 .timeline-section-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 12px; }
 .timeline-title-navigation { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .timeline-title-navigation h1 { font: 30px var(--serif); letter-spacing: -.5px; margin: 0; white-space: normal; }
-.timeline-title-navigation h2 { font: 25px var(--serif); letter-spacing: -.3px; margin: 0; text-transform: none; }
+.timeline-title-navigation h3 { font: 25px var(--serif); letter-spacing: -.3px; margin: 0; text-transform: none; }
 .schedule-time-zone { font-size: 11px; color: var(--muted); }
 .schedule-status:empty { display: none; }
 .schedule-status p { margin: 0 0 10px; }
@@ -382,12 +382,13 @@ main { display: flex; justify-content: center; padding: 6px 0 48px; }
   .app-header { grid-template-columns: 160px minmax(0, 1fr) auto; }
   .calendar-workspace .orbit-stage { width: 100%; }
   .timeline-title-navigation h1 { font-size: 26px; }
-  .timeline-title-navigation h2 { font-size: 23px; }
+  .timeline-title-navigation h3 { font-size: 23px; }
   .schedule-time-zone { display: none; }
   .schedule-actions { gap: 12px; }
   .time-shading-legend { gap: 12px; }
   .calendar-workspace .orbit-direction-button { min-height: 36px; padding: 7px 9px; font-size: 11px; }
 }
+
 @media (max-width: 480px) {
   .app-header { grid-template-columns: minmax(0, 1fr) auto; height: 100px; gap: 2px 12px; padding: 8px 0; }
   .brand { grid-column: 1; grid-row: 1; }
@@ -400,4 +401,61 @@ main { display: flex; justify-content: center; padding: 6px 0 48px; }
   .timeline-title-navigation { gap: 4px; }
   .timeline-title-navigation h1 { font-size: 24px; }
   .schedule-day-navigation .icon-button { width: 26px; }
+}
+
+/* Persistent app controls and independently collapsible calendar views. */
+html { scroll-padding-top: 76px; }
+.app-header { grid-template-columns: minmax(280px, 1fr) minmax(120px, 484px) auto; }
+.brand-name { white-space: nowrap; }
+.year-controls { gap: 8px; }
+.calendar-section + .calendar-section, .year-calendar-section { margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 12px; }
+.calendar-section-heading { margin: 0; font: 25px var(--serif); letter-spacing: -.3px; text-transform: none; }
+.calendar-section-toggle { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 0; border: 0; border-radius: 4px; background: transparent; text-align: left; }
+.calendar-section-toggle:hover { color: var(--accent); background: var(--surface-hover); }
+.calendar-section-toggle svg { flex-shrink: 0; transition: transform .15s; }
+.calendar-section-toggle[aria-expanded='true'] svg { transform: rotate(90deg); }
+.calendar-section-content { padding-top: 12px; }
+.calendar-section-header.with-navigation { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.calendar-section-header.with-navigation .calendar-section-toggle { width: fit-content; padding-right: 12px; }
+.calendar-section-header .timeline-title-navigation { justify-self: center; gap: 8px; }
+.calendar-section-header .timeline-title-navigation h1, .calendar-section-header .timeline-title-navigation h3 { font-size: 26px; text-align: center; white-space: nowrap; }
+.header-year-picker { position: relative; display: flex; align-items: center; justify-content: center; width: 100px; min-height: 40px; border-radius: 6px; }
+.header-year-picker:hover { background: var(--surface-hover); }
+.header-year-picker:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.header-year-value { font: 26px var(--serif); letter-spacing: -.3px; }
+.header-year-picker .year-picker-chevron { right: 6px; font-size: 18px; }
+.calendar-section-actions { min-width: 0; justify-self: end; }
+.calendar-section-actions .schedule-actions, .calendar-section-actions .time-shading-legend { justify-content: flex-end; flex-wrap: wrap; gap: 4px 12px; }
+.schedule-date-short { display: none; }
+.calendar-section-content[hidden] { display: none; }
+.calendar-workspace .year-calendar-section .orbit-stage { margin-top: 0; }
+@media (max-width: 900px) {
+  html { scroll-padding-top: 116px; }
+  .app-header { grid-template-columns: minmax(0, 1fr) auto; height: 100px; gap: 2px 12px; padding: 8px 0; }
+  .brand { grid-column: 1; grid-row: 1; }
+  .year-controls { grid-column: 2; grid-row: 1; }
+  .year-timeline { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+}
+@media (max-width: 480px) {
+  .app-header { gap: 2px 8px; }
+  .brand-name { font-size: 22px; }
+  .year-controls { gap: 4px; }
+  .year-controls .schedule-button, .year-controls .today-button { min-height: 36px; padding: 7px 8px; font-size: 11px; }
+  .calendar-section-heading { font-size: 24px; }
+}
+@media (max-width: 640px) {
+  .calendar-section-header.with-navigation { gap: 4px; }
+  .calendar-section-header .timeline-title-navigation { gap: 2px; }
+  .calendar-section-header .timeline-title-navigation h1, .calendar-section-header .timeline-title-navigation h3 { font-size: 18px; }
+  .header-year-value { font-size: 18px; }
+  .header-year-picker { width: 80px; }
+  .calendar-section-header .icon-button { width: 26px; }
+  .calendar-section-header.with-navigation .calendar-section-toggle { gap: 4px; padding-right: 0; }
+  .calendar-section-header .calendar-section-heading { font-size: 20px; }
+  .schedule-date-long { display: none; }
+  .schedule-date-short { display: inline; }
+  .week-schedule-section .calendar-section-actions { grid-column: 1 / -1; justify-self: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calendar-section-toggle svg { transition: none; }
 }
