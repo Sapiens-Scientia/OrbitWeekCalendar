@@ -11,6 +11,7 @@ import useGoogleCalendar from './useGoogleCalendar.js';
 import { canWriteCalendar } from './googleCalendar.js';
 import CalendarSection from './components/CalendarSection.jsx';
 import YearNavigation from './components/YearNavigation.jsx';
+import SelectedDayPanel from './components/SelectedDayPanel.jsx';
 
 export default function App() {
   const today = localToday();
@@ -59,8 +60,12 @@ export default function App() {
       {ringNotice && <p className="schedule-notice" role="status">{ringNotice}</p>}
       <ScheduleViews selected={selected} onSelect={setSelected} google={google} onSettings={() => setSettingsOpen(true)} />
       <CalendarSection title="Year" className="year-calendar-section" headerContent={<YearNavigation selected={selected} onSelect={setSelected} />}>
-        <OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} januaryAtBottom={januaryAtBottom} onToggleJanuaryPosition={() => setJanuaryAtBottom(value => !value)}
-          allDayEvents={google.yearEvents} onDayEvents={(day, events) => { setRingNotice(''); setRingEditor({ day, events, event: events.length === 1 ? events[0] : null }); }} />
+        <div className="year-calendar-layout">
+          <OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} januaryAtBottom={januaryAtBottom} onToggleJanuaryPosition={() => setJanuaryAtBottom(value => !value)}
+            allDayEvents={google.yearEvents} onDayEvents={(day, events) => { setRingNotice(''); setRingEditor({ day, events, event: events.length === 1 ? events[0] : null }); }} />
+          <SelectedDayPanel selected={selected} seasons={seasons} google={google} onSettings={() => setSettingsOpen(true)}
+            onEvent={event => { setRingNotice(''); setRingEditor({ day: selected, events: [event], event }); }} />
+        </div>
         {google.loadingYearEvents && <p className="ring-event-status schedule-muted" role="status">Loading all-day events for {year}…</p>}
         {google.yearEventErrors.map(message => <p key={message} className="ring-event-status schedule-error" role="alert">Ring events · {message} <button className="schedule-text-button" onClick={google.refresh}>Retry</button></p>)}
       </CalendarSection>

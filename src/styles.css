@@ -29,8 +29,6 @@
   --weekend-divider: #354f41;
   --week-outline: #527b9a;
   --season-circle: #bfc4bf;
-  --ochre: #a0783f;
-  --ochre-ink: #896638;
   --sun: #cba767;
   --danger: #934234;
   --now: #a94e43;
@@ -103,13 +101,13 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; pa
 .orbit-week-number.is-selected { fill: var(--accent); font-weight: 600; }
 .season-date-circle { fill: none; stroke: var(--season-circle); stroke-width: .8; pointer-events: none; }
 .season-marker { cursor: pointer; outline: none; }
-.season-marker line { stroke: var(--ochre); stroke-width: 1.5; pointer-events: none; }
-.season-marker text { fill: var(--ochre-ink); text-anchor: middle; pointer-events: none; font-family: 'DM Sans', sans-serif; }
+.season-marker line { stroke: var(--season-circle); stroke-width: 1.5; pointer-events: none; }
+.season-marker text { fill: var(--season-circle); text-anchor: middle; pointer-events: none; font-family: 'DM Sans', sans-serif; }
 .season-date { font-size: 9px; font-weight: 600; letter-spacing: .6px; }
 .season-kind { font-size: 8px; letter-spacing: .8px; }
 .season-hit-area { fill: transparent; stroke: transparent; }
-.season-marker:hover .season-hit-area, .season-marker:focus-visible .season-hit-area { fill: color-mix(in srgb, var(--sun) 13%, transparent); stroke: var(--ochre); stroke-width: .8; }
-.season-detail { color: var(--ochre-ink); font-size: 12px; line-height: 1.5; margin: 12px 0 0; }
+.season-marker:hover .season-hit-area, .season-marker:focus-visible .season-hit-area { fill: color-mix(in srgb, var(--season-circle) 13%, transparent); stroke: var(--season-circle); stroke-width: .8; }
+.season-detail { color: var(--season-circle); font-size: 12px; line-height: 1.5; margin: 12px 0 0; }
 .season-detail span { white-space: nowrap; }
 .day-number { font: 9px 'DM Sans', sans-serif; text-anchor: middle; pointer-events: none; fill: var(--ink); font-variant-numeric: tabular-nums; }
 .selected-number { fill: var(--on-accent); font-weight: 600; }
@@ -366,12 +364,12 @@ main { display: flex; justify-content: center; padding: 6px 0 48px; }
 .time-axis.vertical span { left: 0; transform: translateY(-50%); }
 .time-axis.vertical span:first-child { transform: none; }
 .time-axis.vertical span:last-child { transform: translateY(-100%); }
-.week-time-column { height: var(--week-height); position: relative; background: var(--surface); border-left: 1px solid var(--rule); border-bottom: 1px solid var(--rule); overflow: hidden; }
+.vertical-time-track { height: var(--week-height); position: relative; background: var(--surface); border-left: 1px solid var(--rule); border-bottom: 1px solid var(--rule); overflow: hidden; }
 .week-time-column:last-child { border-right: 1px solid var(--rule); }
 .week-time-column.is-selected { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 31%, transparent); }
-.week-time-column .nighttime-shading, .week-time-column .worktime-shading { inset-inline: 0; width: auto; }
-.week-time-column .nighttime-shading { top: 0; height: 25%; bottom: auto; }
-.week-time-column .worktime-shading { top: 37.5%; height: 33.333333%; bottom: auto; }
+.vertical-time-track .nighttime-shading, .vertical-time-track .worktime-shading { inset-inline: 0; width: auto; }
+.vertical-time-track .nighttime-shading { top: 0; height: 25%; bottom: auto; }
+.vertical-time-track .worktime-shading { top: 37.5%; height: 33.333333%; bottom: auto; }
 .hour-grid.vertical { grid-template-columns: none; grid-template-rows: repeat(24, minmax(0, 1fr)); }
 .hour-grid.vertical span { border-left: 0; border-top: 1px solid var(--hour-rule); }
 .hour-grid.vertical span:first-child { border-top: 0; }
@@ -458,4 +456,21 @@ html { scroll-padding-top: 76px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .calendar-section-toggle svg { transition: none; }
+}
+
+/* Selected-day details and a full vertical schedule beside the annual ring. */
+.year-calendar-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: 24px; }
+.year-calendar-layout > .orbit-stage { align-self: start; }
+.selected-day-panel { min-width: 0; --week-height: 576px; border-left: 1px solid var(--rule); padding: 12px 0 0 20px; }
+.day-panel-heading { margin-bottom: 14px; }
+.day-panel-weekday { font: 22px var(--serif); margin: 0 0 5px; }
+.day-panel-heading h3 { font: 28px var(--serif); letter-spacing: -.4px; line-height: 1.15; margin: 0 0 10px; }
+.day-panel-time-zone { color: var(--muted); font-size: 10px; margin: 10px 0 0; }
+.day-panel-schedule { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 0; }
+.day-panel-all-day-caption { color: var(--muted); font-size: 10px; padding-top: 10px; }
+.day-panel-time-column { border-right: 1px solid var(--rule); }
+.day-panel-time-column .vertical-event { font-size: 11px; padding: 3px 5px; }
+@media (max-width: 800px) {
+  .year-calendar-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .selected-day-panel { border-left: 0; border-top: 1px solid var(--rule); padding: 20px 0 0; }
 }

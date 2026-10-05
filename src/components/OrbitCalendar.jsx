@@ -189,7 +189,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
           {seasons.some(event => event.key === key) && <circle cx={numberX} cy={numberY} r={position ? position.fontSize < 8 ? 5 : 6.5 : 9} className={`season-date-circle${isSelected && !dayEvents ? ' is-selected' : ''}`} />}
           <text x={numberX} y={numberY} dy=".35em" style={position ? { fontSize: position.fontSize } : undefined} className={`day-number${dayEvents ? ' ring-event-day-number' : ''}${isSelected ? ' selected-number' : ''}`}>{date.getUTCDate()}</text>
           {dayEvents?.length > 1 && <text className={`ring-event-count${isSelected ? ' selected-number' : ''}`} data-date={key} x={position.countX} y={position.countY} dy=".35em">+{dayEvents.length - 1}</text>}
-          {key === todayKey && <circle cx={position?.todayX ?? x} cy={position?.todayY ?? y + 8} r="1.5" fill={isSelected ? 'var(--on-accent)' : 'var(--accent)'} pointerEvents="none" />}
+          {key === todayKey && <circle className="today-ring-dot" cx={position?.todayX ?? x} cy={position?.todayY ?? y + 8} r="1.5" fill="var(--now)" pointerEvents="none" />}
         </g>;
       })}
       <path className="year-seam" d={`M ${point(INNER, angleOffset)} L ${point(INNER + TRACK * 7, angleOffset)} M ${point(INNER, endAngle)} L ${point(INNER + TRACK * 7, endAngle)}`} aria-hidden="true" />
