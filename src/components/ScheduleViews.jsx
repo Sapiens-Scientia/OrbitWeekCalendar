@@ -1,13 +1,42 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addDays, dateKey, formatDate, startOfWeek, weekday } from '../calendar.js';
 import { calendarName, canWriteCalendar } from '../googleCalendar.js';
-import { eventTimeLabel, eventTitle, HOURS, hourLabel, layoutDay } from '../schedule.js';
+import { currentTimePosition, eventTimeLabel, eventTitle, HOURS, hourLabel, layoutDay } from '../schedule.js';
 import EventEditor from './EventEditor.jsx';
 import { Chevron } from './Icons.jsx';
 
 const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const MIN_DATE = '1900-01-01', MAX_DATE = '2200-12-31';
 const inBounds = date => dateKey(date) >= MIN_DATE && dateKey(date) <= MAX_DATE;
+const currentClock = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' });
+
+function useCurrentTime() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    let timer;
+    const tick = () => {
+      setNow(new Date());
+      timer = setTimeout(tick, 60000 - Date.now() % 60000);
+    };
+    const resume = () => { clearTimeout(timer); tick(); };
+    const onVisibility = () => { if (!document.hidden) resume(); };
+    timer = setTimeout(tick, 60000 - Date.now() % 60000);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', resume);
+    return () => { clearTimeout(timer); document.removeEventListener('visibilitychange', onVisibility); window.removeEventListener('focus', resume); };
+  }, []);
+  return now;
+}
+
+function CurrentTimeMarker({ day, now, vertical = false }) {
+  const position = currentTimePosition(now, day);
+  if (position === null) return null;
+  const time = currentClock.format(now);
+  return <div className={`current-time-marker${vertical ? ' in-week-view' : ''}${position > 90 ? ' label-before' : ''}`}
+    style={{ [vertical ? 'top' : 'left']: `${position}%` }} role="img" aria-label={`Current time, ${time}`}>
+    <span className="current-time-dot" /><span className="current-time-label">Now {time}</span>
+  </div>;
+}
 
 function EventButton({ event, className = '', style, onClick, children }) {
   const label = `${eventTitle(event)}, ${eventTimeLabel(event)}, ${calendarName(event.calendar)}`;
@@ -28,24 +57,24 @@ function TimeShading({ day }) {
   return <><div className="nighttime-shading" aria-hidden="true" />{weekday(day) < 5 && <div className="worktime-shading" aria-hidden="true" />}</>;
 }
 
-function DayStrip({ day, layout, onEvent }) {
+function DayStrip({ day, layout, onEvent, now }) {
   return <div className="day-strip-scroll" tabIndex={0} role="region" aria-label="Selected day 24-hour timeline">
     <div className="day-strip-content">
       <TimeAxis />
-      {layout.allDay.length > 0 && <div className="day-all-day"><span className="all-day-label">All day</span>{layout.allDay.map(event => <EventButton key={`${event.calendar.id}:${event.id}`} event={event} onClick={() => onEvent(event)} />)}</div>}
+      <div className="day-all-day"><span className="all-day-label">All day</span>{layout.allDay.map(event => <EventButton key={`${event.calendar.id}:${event.id}`} event={event} onClick={() => onEvent(event)} />)}</div>
       <div className="day-time-track" style={{ height: `${layout.lanes * 36 + 16}px` }}>
         <TimeShading day={day} /><HourGrid />
         {layout.timed.map(segment => <EventButton key={`${segment.event.calendar.id}:${segment.event.id}`} event={segment.event} className="horizontal-event"
           style={{ left: `${segment.from / 1440 * 100}%`, width: `${(segment.to - segment.from) / 1440 * 100}%`, top: `${8 + segment.lane * 36}px` }}
           onClick={() => onEvent(segment.event)}><span>{eventTitle(segment.event)}</span></EventButton>)}
+        <CurrentTimeMarker day={day} now={now} />
       </div>
     </div>
   </div>;
 }
 
-function WeekView({ days, layouts, selected, onSelect, onEvent }) {
+function WeekView({ days, layouts, selected, onSelect, onEvent, now }) {
   const selectedKey = dateKey(selected);
-  const hasAllDay = layouts.some(layout => layout.allDay.length);
   return <div className="week-view-scroll" tabIndex={0} role="region" aria-label="Monday through Sunday 24-hour week schedule">
     <div className="week-time-grid">
       <div className="week-axis-caption">24 hours</div>
@@ -54,9 +83,9 @@ function WeekView({ days, layouts, selected, onSelect, onEvent }) {
         aria-pressed={dateKey(day) === selectedKey} disabled={!inBounds(day)} onClick={() => onSelect(day)}>
         <span>{formatDate(day, { weekday: 'short' })}</span><strong>{formatDate(day, { month: 'short', day: 'numeric' })}</strong>
       </button>)}
-      {hasAllDay && <><div className="week-all-day-caption">All day</div>{layouts.map((layout, index) => <div className="week-all-day" key={`all-day:${dateKey(days[index])}`}>
+      <div className="week-all-day-caption">All day</div>{layouts.map((layout, index) => <div className="week-all-day" key={`all-day:${dateKey(days[index])}`}>
         {layout.allDay.map(event => <EventButton key={`${event.calendar.id}:${event.id}`} event={event} onClick={() => onEvent(event)} />)}
-      </div>)}</>}
+      </div>)}
       <TimeAxis vertical />
       {days.map((day, index) => <div key={dateKey(day)} className={`week-time-column${dateKey(day) === selectedKey ? ' is-selected' : ''}`}
         role="group" aria-label={`${formatDate(day, { weekday: 'long', month: 'long', day: 'numeric' })} schedule`}>
@@ -64,12 +93,14 @@ function WeekView({ days, layouts, selected, onSelect, onEvent }) {
         {layouts[index].timed.map(segment => <EventButton key={`${segment.event.calendar.id}:${segment.event.id}`} event={segment.event} className="vertical-event"
           style={{ top: `${segment.from / 1440 * 100}%`, height: `${(segment.to - segment.from) / 1440 * 100}%`, left: `calc(${segment.lane / segment.columns * 100}% + 2px)`, width: `calc(${100 / segment.columns}% - 4px)` }}
           onClick={() => onEvent(segment.event)}><span>{eventTitle(segment.event)}</span></EventButton>)}
+        <CurrentTimeMarker day={day} now={now} vertical />
       </div>)}
     </div>
   </div>;
 }
 
 export default function ScheduleViews({ selected, onSelect, google, onSettings }) {
+  const now = useCurrentTime();
   const [editor, setEditor] = useState(null);
   const [notice, setNotice] = useState('');
   const weekKey = dateKey(startOfWeek(selected));
@@ -102,7 +133,7 @@ export default function ScheduleViews({ selected, onSelect, google, onSettings }
         {google.calendarError && <p className="schedule-error" role="alert">{google.calendarError}</p>}
         {google.eventErrors.map(message => <p key={message} className="schedule-error" role="alert">{message}</p>)}
       </div>
-      <DayStrip day={selected} layout={selectedLayout} onEvent={event => setEditor({ selected, event })} />
+      <DayStrip day={selected} layout={selectedLayout} onEvent={event => setEditor({ selected, event })} now={now} />
     </section>
     <section className="week-schedule-section" aria-labelledby="week-schedule-title">
       <header className="timeline-section-header">
@@ -112,7 +143,7 @@ export default function ScheduleViews({ selected, onSelect, google, onSettings }
         </nav><h2 id="week-schedule-title">{formatDate(days[0], { month: 'short', day: 'numeric' })} – {formatDate(days[6], { month: 'short', day: 'numeric', year: 'numeric' })}</h2></div>
         <div className="time-shading-legend"><span><i className="night-legend" />Night · 12am–6am</span><span><i className="work-legend" />Work · Mon–Fri, 9am–5pm</span></div>
       </header>
-      <WeekView days={days} layouts={layouts} selected={selected} onSelect={selectDay} onEvent={event => setEditor({ selected, event })} />
+      <WeekView days={days} layouts={layouts} selected={selected} onSelect={selectDay} onEvent={event => setEditor({ selected, event })} now={now} />
     </section>
     {editor && google.connected && <EventEditor selected={editor.selected} calendars={google.calendars} selectedIds={google.selectedIds} event={editor.event} onWrite={google.writeEvent} onClose={message => { setEditor(null); if (message) setNotice(message); }} />}
   </div>;

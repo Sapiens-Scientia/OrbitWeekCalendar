@@ -1,4 +1,4 @@
-import { addDays, dateKey } from './calendar.js';
+import { addDays, civilDate, dateKey } from './calendar.js';
 
 export const HOURS = Array.from({ length: 25 }, (_, hour) => hour);
 export const hourLabel = hour => `${hour % 12 || 12}${hour < 12 || hour === 24 ? 'am' : 'pm'}`;
@@ -18,6 +18,11 @@ export function localMidnight(civil) {
 }
 
 const wallMinutes = date => date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60;
+
+export function currentTimePosition(now, day) {
+  const today = civilDate(now.getFullYear(), now.getMonth(), now.getDate());
+  return dateKey(today) === dateKey(day) ? wallMinutes(now) / 1440 * 100 : null;
+}
 
 // Clip overnight events to this civil day. Positions follow the 24-hour wall clock,
 // rather than stretching the axis on 23/25-hour daylight-saving days.

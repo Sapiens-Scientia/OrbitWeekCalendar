@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { civilDate, dateKey, startOfWeek, addDays } from '../src/calendar.js';
-import { hourLabel, layoutDay, segmentForDay } from '../src/schedule.js';
+import { currentTimePosition, hourLabel, layoutDay, segmentForDay } from '../src/schedule.js';
 import { listRangeEvents } from '../src/googleCalendar.js';
 
 const timed = (id, start, end) => ({ id, start: { dateTime: start }, end: { dateTime: end } });
@@ -61,6 +61,22 @@ test('daylight saving days retain a midnight-to-midnight 24-hour wall-clock axis
   const repeatedHour = timed('fall', '2026-11-01T01:45:00-04:00', '2026-11-01T01:15:00-05:00');
   const fall = segmentForDay(repeatedHour, civilDate(2026, 10, 1));
   assert(fall.to > fall.from);
+}));
+
+test('current time uses the local date and moves to the next day at local midnight', () => inNewYork(() => {
+  const lateMonday = new Date('2026-10-06T03:30:00Z');
+  assert.equal(currentTimePosition(lateMonday, civilDate(2026, 9, 5)), 97.91666666666666);
+  assert.equal(currentTimePosition(lateMonday, civilDate(2026, 9, 6)), null);
+  const midnight = new Date('2026-10-06T04:00:00Z');
+  assert.equal(currentTimePosition(midnight, civilDate(2026, 9, 5)), null);
+  assert.equal(currentTimePosition(midnight, civilDate(2026, 9, 6)), 0);
+}));
+
+test('current time follows the wall-clock axis through both daylight-saving transitions', () => inNewYork(() => {
+  const spring = civilDate(2026, 2, 8), fall = civilDate(2026, 10, 1);
+  assert.equal(currentTimePosition(new Date('2026-03-08T03:30:00-04:00'), spring), 14.583333333333334);
+  assert.equal(currentTimePosition(new Date('2026-11-01T01:30:00-04:00'), fall), 6.25);
+  assert.equal(currentTimePosition(new Date('2026-11-01T01:30:00-05:00'), fall), 6.25);
 }));
 
 test('week requests use a single inclusive-start / exclusive-end date range', async t => {
