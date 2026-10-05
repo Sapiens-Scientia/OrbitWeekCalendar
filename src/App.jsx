@@ -3,11 +3,16 @@ import { calendarYear, changeYear, localToday } from './calendar.js';
 import { seasonEvents } from './seasons.js';
 import OrbitCalendar from './components/OrbitCalendar.jsx';
 import { OrbitMark } from './components/Icons.jsx';
+import ScheduleViews from './components/ScheduleViews.jsx';
+import CalendarSettings from './components/CalendarSettings.jsx';
+import useGoogleCalendar from './useGoogleCalendar.js';
 
 export default function App() {
   const today = localToday();
   const [selected, setSelected] = useState(today);
   const [januaryAtBottom, setJanuaryAtBottom] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const google = useGoogleCalendar(selected);
   const year = selected.getUTCFullYear();
   const calendar = useMemo(() => calendarYear(year), [year]);
   const seasons = useMemo(() => seasonEvents(year), [year]);
@@ -31,10 +36,17 @@ export default function App() {
         {nearbyYears.map(value => <button key={value} aria-label={`Show ${value}`} aria-current={value === year ? 'date' : undefined}
           disabled={value < 1900 || value > 2200} onClick={() => setSelected(changeYear(selected, value))}>{value}</button>)}
       </nav>
-      <nav className="year-controls" aria-label="Calendar year">
+      <nav className="year-controls" aria-label="Calendar controls">
         <button className="today-button" onClick={() => setSelected(localToday())}>Today</button>
+        <button className="schedule-button settings-button" aria-label="Settings" aria-haspopup="dialog" onClick={() => setSettingsOpen(true)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9.3 3-.6 2.4-2.1 1.2-2.4-.6-2.1 3.6 1.8 1.8v2.4l-1.8 1.8 2.1 3.6 2.4-.6 2.1 1.2.6 2.2h4.2l.6-2.2 2.1-1.2 2.4.6 2.1-3.6-1.8-1.8v-2.4l1.8-1.8-2.1-3.6-2.4.6-2.1-1.2-.6-2.4z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><circle cx="11.4" cy="12.6" r="3.2" stroke="currentColor" strokeWidth="1.4" /></svg><span>Settings</span>
+        </button>
       </nav>
     </header>
-    <main><OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} januaryAtBottom={januaryAtBottom} onToggleJanuaryPosition={() => setJanuaryAtBottom(value => !value)} /></main>
+    <main className="calendar-workspace">
+      <ScheduleViews selected={selected} onSelect={setSelected} google={google} onSettings={() => setSettingsOpen(true)} />
+      <OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} januaryAtBottom={januaryAtBottom} onToggleJanuaryPosition={() => setJanuaryAtBottom(value => !value)} />
+    </main>
+    {settingsOpen && <CalendarSettings google={google} onClose={() => setSettingsOpen(false)} />}
   </div>;
 }
