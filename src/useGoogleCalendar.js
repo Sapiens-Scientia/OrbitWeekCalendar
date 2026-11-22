@@ -11,7 +11,7 @@ function savedSelection(account) {
   } catch { return null; }
 }
 
-export default function useGoogleCalendar(selected) {
+export default function useGoogleCalendar(selected, sundayStart) {
   const [oauth, setOauth] = useState(null);
   const [token, setToken] = useState(null);
   const [connecting, setConnecting] = useState(false);
@@ -32,7 +32,7 @@ export default function useGoogleCalendar(selected) {
   const [scriptRevision, setScriptRevision] = useState(0);
   const expiryRef = useRef(null);
   const sessionRef = useRef(0);
-  const key = dateKey(startOfWeek(selected));
+  const key = dateKey(startOfWeek(selected, sundayStart));
   const year = selected.getUTCFullYear();
 
   function clearSession(message = '') {

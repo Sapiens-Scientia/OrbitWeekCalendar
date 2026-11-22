@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { calendarName, canWriteCalendar } from '../googleCalendar.js';
 
-export default function CalendarSettings({ google, onClose }) {
+export default function CalendarSettings({ google, onClose, sundayStart, onWeekStartChange }) {
   const dialogRef = useRef(null);
   const primary = google.calendars.find(calendar => calendar.primary);
   useEffect(() => {
@@ -11,6 +11,13 @@ export default function CalendarSettings({ google, onClose }) {
   }, []);
   return <dialog className="event-dialog settings-dialog" ref={dialogRef} aria-labelledby="settings-title" onCancel={e => { e.preventDefault(); onClose(); }}>
     <div className="schedule-section-heading"><h2 id="settings-title">Settings</h2><button className="schedule-text-button" onClick={onClose}>Done</button></div>
+    <label className="settings-week-start">
+      Week starts on
+      <select value={sundayStart ? 'sunday' : 'monday'} onChange={event => onWeekStartChange(event.target.value === 'sunday')}>
+        <option value="monday">Monday</option>
+        <option value="sunday">Sunday</option>
+      </select>
+    </label>
     <section className="settings-connection" aria-label="Google Calendar connection">
       <div className="schedule-section-heading"><h3>Google Calendar</h3>{google.connected && <button className="schedule-text-button" onClick={google.disconnect}>Disconnect</button>}</div>
       {google.connected ? <>

@@ -99,6 +99,9 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; pa
 .time-direction-arrow, .time-direction-arrowhead { fill: none; stroke: var(--orientation); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 .orbit-week-number { font: 8.5px 'DM Sans', sans-serif; font-variant-numeric: tabular-nums; text-anchor: middle; fill: var(--quiet); }
 .orbit-week-number.is-selected { fill: var(--accent); font-weight: 600; }
+.orbit-weekday-guides { pointer-events: none; }
+.orbit-weekday-guide path { fill: var(--surface-hover); stroke: var(--ring-edge); stroke-width: .7; }
+.orbit-weekday-guide text { fill: var(--ink-strong); font: 700 13px 'DM Sans', sans-serif; text-anchor: middle; }
 .season-date-circle { fill: none; stroke: var(--season-circle); stroke-width: .8; pointer-events: none; }
 .season-marker { cursor: pointer; outline: none; }
 .season-marker line { stroke: var(--season-circle); stroke-width: 1.5; pointer-events: none; }
@@ -292,6 +295,8 @@ main { display: flex; justify-content: center; padding: 6px 0 48px; }
 .delete-confirmation { border-top: 1px solid var(--rule); padding-top: 12px; font-size: 13px; line-height: 1.6; }
 
 .settings-button { display: flex; align-items: center; gap: 7px; padding: 9px 12px; }
+.settings-week-start { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; font-size: 14px; }
+.settings-week-start select { padding: 8px; border: 1px solid var(--input-rule); border-radius: 5px; background: var(--surface); color: inherit; font: inherit; }
 .settings-connection { margin-top: 24px; border-top: 1px solid var(--rule); padding-top: 18px; }
 .settings-connection h3 { font-size: 14px; font-weight: 500; margin: 0; }
 .settings-calendars { padding: 12px 0 0; margin: 20px 0 0; border: 0; border-top: 1px solid var(--rule); min-width: 0; }

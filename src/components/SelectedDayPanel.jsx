@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import { dateKey, dayOfYear, daysInYear, formatDate, isoWeek } from '../calendar.js';
+import { dateKey, dayOfYear, daysInYear, formatDate, displayWeekNumber } from '../calendar.js';
 import { layoutDay } from '../schedule.js';
 import { EventButton, TimeAxis, useCurrentTime, VerticalDayTrack } from './ScheduleTimeline.jsx';
 
 const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone.replaceAll('_', ' ');
 
-export default function SelectedDayPanel({ selected, seasons, google, onSettings, onEvent }) {
+export default function SelectedDayPanel({ sundayStart, selected, seasons, google, onSettings, onEvent }) {
   const now = useCurrentTime();
   const layout = useMemo(() => layoutDay(google.events, selected), [google.events, selected]);
   const season = seasons.find(event => event.key === dateKey(selected));
@@ -15,7 +15,7 @@ export default function SelectedDayPanel({ selected, seasons, google, onSettings
       <div aria-live="polite" aria-atomic="true">
         <p className="day-panel-weekday">{formatDate(selected, { weekday: 'long' })}</p>
         <h3>{formatDate(selected, { month: 'long', day: 'numeric', year: 'numeric' })}</h3>
-        <p className="date-meta">Day {dayOfYear(selected)} of {daysInYear(selected.getUTCFullYear())} <span>·</span> Week {isoWeek(selected)}</p>
+        <p className="date-meta">Day {dayOfYear(selected)} of {daysInYear(selected.getUTCFullYear())} <span>·</span> Week {displayWeekNumber(selected, sundayStart)}</p>
         {season && <p className="season-detail">{season.name} <span>· {season.timeLabel}</span></p>}
       </div>
       <p className="day-panel-time-zone">{TIME_ZONE}</p>

@@ -24,7 +24,8 @@ export const civilDate = (year, month, day) => new Date(Date.UTC(year, month, da
 export const dateKey = (date) => date.toISOString().slice(0, 10);
 export const weekday = (date) => (date.getUTCDay() + 6) % 7;
 export const addDays = (date, days) => new Date(date.getTime() + days * DAY);
-export const startOfWeek = (date) => addDays(date, -weekday(date));
+export const weekDayIndex = (date, sundayStart) => sundayStart ? date.getUTCDay() : weekday(date);
+export const startOfWeek = (date, sundayStart = false) => addDays(date, -weekDayIndex(date, sundayStart));
 export const formatDate = (date, options) => new Intl.DateTimeFormat('en-US', { ...options, timeZone: 'UTC' }).format(date);
 export const dayOfYear = (date) => Math.round((date - civilDate(date.getUTCFullYear(), 0, 1)) / DAY) + 1;
 export const daysInYear = (year) => Math.round((civilDate(year + 1, 0, 1) - civilDate(year, 0, 1)) / DAY);
@@ -38,8 +39,13 @@ export function isoWeek(date) {
   return Math.floor((thursday - startOfWeek(civilDate(thursday.getUTCFullYear(), 0, 4))) / (7 * DAY)) + 1;
 }
 
-export function calendarYear(year) {
-  const start = startOfWeek(civilDate(year, 0, 1));
+// Use the ISO number of the Monday in the displayed week.
+export function displayWeekNumber(date, sundayStart) {
+  return isoWeek(addDays(startOfWeek(date, sundayStart), sundayStart ? 1 : 0));
+}
+
+export function calendarYear(year, sundayStart = false) {
+  const start = startOfWeek(civilDate(year, 0, 1), sundayStart);
   const end = civilDate(year, 11, 31);
   const weekCount = Math.floor((end - start) / (7 * DAY)) + 1;
   const weeks = Array.from({ length: weekCount }, (_, week) =>

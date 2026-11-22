@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addDays, dateKey, formatDate, startOfWeek, weekday } from '../calendar.js';
+import { addDays, dateKey, formatDate, startOfWeek, weekDayIndex } from '../calendar.js';
 import { eventTitle, layoutDay } from '../schedule.js';
 import { CurrentTimeMarker, EventButton, HourGrid, TimeAxis, TimeShading, useCurrentTime, VerticalDayTrack } from './ScheduleTimeline.jsx';
 import EventEditor from './EventEditor.jsx';
@@ -26,9 +26,9 @@ function DayStrip({ day, layout, onEvent, now }) {
   </div>;
 }
 
-function WeekView({ days, layouts, selected, onSelect, onEvent, now }) {
+function WeekView({ days, layouts, selected, onSelect, onEvent, now, sundayStart }) {
   const selectedKey = dateKey(selected);
-  return <div className="week-view-scroll" tabIndex={0} role="region" aria-label="Monday through Sunday 24-hour week schedule">
+  return <div className="week-view-scroll" tabIndex={0} role="region" aria-label={`${sundayStart ? 'Sunday through Saturday' : 'Monday through Sunday'} 24-hour week schedule`}>
     <div className="week-time-grid">
       <div className="week-axis-caption">24 hours</div>
       {days.map(day => <button key={`heading:${dateKey(day)}`} className={`week-date-heading${dateKey(day) === selectedKey ? ' is-selected' : ''}`}
@@ -46,14 +46,14 @@ function WeekView({ days, layouts, selected, onSelect, onEvent, now }) {
   </div>;
 }
 
-export default function ScheduleViews({ selected, onSelect, google, onSettings }) {
+export default function ScheduleViews({ selected, onSelect, google, onSettings, sundayStart }) {
   const now = useCurrentTime();
   const [editor, setEditor] = useState(null);
   const [notice, setNotice] = useState('');
-  const weekKey = dateKey(startOfWeek(selected));
+  const weekKey = dateKey(startOfWeek(selected, sundayStart));
   const days = useMemo(() => Array.from({ length: 7 }, (_, index) => addDays(new Date(`${weekKey}T00:00:00Z`), index)), [weekKey]);
   const layouts = useMemo(() => days.map(day => layoutDay(google.events, day)), [days, google.events]);
-  const selectedLayout = layouts[weekday(selected)];
+  const selectedLayout = layouts[weekDayIndex(selected, sundayStart)];
   const busy = google.loadingCalendars || google.loadingEvents;
   useEffect(() => { if (!google.connected) { setEditor(null); setNotice(''); } }, [google.connected]);
   function selectDay(day) { setNotice(''); onSelect(day); }
@@ -86,7 +86,7 @@ export default function ScheduleViews({ selected, onSelect, google, onSettings }
         <button className="icon-button" aria-label="Next week" disabled={!inBounds(nextWeek)} onClick={() => selectDay(nextWeek)}><Chevron /></button>
       </nav>
     } headerActions={<div className="time-shading-legend"><span><i className="night-legend" />Night · 12am–6am</span><span><i className="work-legend" />Work · Mon–Fri, 9am–5pm</span></div>}>
-      <WeekView days={days} layouts={layouts} selected={selected} onSelect={selectDay} onEvent={event => setEditor({ selected, event })} now={now} />
+      <WeekView sundayStart={sundayStart} days={days} layouts={layouts} selected={selected} onSelect={selectDay} onEvent={event => setEditor({ selected, event })} now={now} />
     </CalendarSection>
     {editor && google.connected && <EventEditor selected={editor.selected} calendars={google.calendars} selectedIds={google.selectedIds} event={editor.event} onWrite={google.writeEvent} onClose={message => { setEditor(null); if (message) setNotice(message); }} />}
   </div>;

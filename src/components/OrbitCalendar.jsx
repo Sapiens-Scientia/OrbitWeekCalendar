@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { addDays, arcCell, dateKey, dayOfYear, formatDate, isoWeek, point, monthFill, RING_INNER as INNER, RING_TRACK as TRACK, startOfWeek, weekdayTrack } from '../calendar.js';
+import { addDays, arcCell, dateKey, dayOfYear, formatDate, displayWeekNumber, point, monthFill, RING_INNER as INNER, RING_TRACK as TRACK, startOfWeek, WEEKDAYS, weekDayIndex, weekdayTrack } from '../calendar.js';
 import { Sun } from './Icons.jsx';
 import YearNavigation from './YearNavigation.jsx';
 import { allDayEventsByDate, allDayEventSpans, compactEventLabel, radialEventBox, radialEventHitArea, radialEventDatePosition } from '../ringEvents.js';
@@ -8,11 +8,12 @@ import { eventTitle } from '../schedule.js';
 
 const TAU = Math.PI * 2;
 const YEAR_GAP = .012;
+const WEEKDAY_GUIDE_ANGLE = .082;
 
-function monthOutline(weeks, month, step, counterclockwise, januaryAtBottom, angleOffset) {
+function monthOutline(weeks, month, weekAngles, counterclockwise, januaryAtBottom) {
   const belongsToMonth = cell => cell?.inYear && cell.date.getUTCMonth() === month;
   const edges = [];
-  const sweep = step > 0 ? 1 : 0;
+  const sweep = counterclockwise ? 0 : 1;
 
   for (const cell of weeks.flat()) {
     if (!belongsToMonth(cell)) continue;
@@ -20,11 +21,11 @@ function monthOutline(weeks, month, step, counterclockwise, januaryAtBottom, ang
     const radialTrack = weekdayTrack(track, week, weeks.length, counterclockwise, januaryAtBottom);
     const inner = INNER + radialTrack * TRACK;
     const outer = inner + TRACK;
-    const start = angleOffset + week * step;
-    const end = start + step;
+    const { start, end } = weekAngles[week];
 
     const neighbor = (neighborWeek, neighborRing) => {
       if (neighborRing < 0 || neighborRing > 6 || !weeks[neighborWeek]) return undefined;
+      if (neighborWeek !== week && weekAngles[Math.max(week, neighborWeek)].guideStart !== null) return undefined;
       return weeks[neighborWeek][weekdayTrack(neighborRing, neighborWeek, weeks.length, counterclockwise, januaryAtBottom)];
     };
 
@@ -46,7 +47,7 @@ function monthOutline(weeks, month, step, counterclockwise, januaryAtBottom, ang
   return edges.join(' ');
 }
 
-export default function OrbitCalendar({ calendar, seasons, selected, today, onSelect, januaryAtBottom, onToggleJanuaryPosition, allDayEvents, onDayEvents }) {
+export default function OrbitCalendar({ sundayStart, calendar, seasons, selected, today, onSelect, januaryAtBottom, onToggleJanuaryPosition, allDayEvents, onDayEvents }) {
   const timeArrowId = useId();
   const cellRefs = useRef(new Map());
   const [zoomed, setZoomed] = useState(false);
@@ -54,29 +55,42 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
   const [counterclockwise, setCounterclockwise] = useState(false);
   const selectedKey = dateKey(selected);
   const todayKey = dateKey(today);
-  const currentWeekStart = startOfWeek(today);
-  const selectedWeek = +startOfWeek(selected);
+  const currentWeekStart = startOfWeek(today, sundayStart);
+  const selectedWeek = +startOfWeek(selected, sundayStart);
   const direction = counterclockwise ? -1 : 1;
-  const step = direction * (TAU - YEAR_GAP) / calendar.weekCount;
   const angleOffset = (januaryAtBottom ? Math.PI : 0) + direction * YEAR_GAP / 2;
-  const endAngle = angleOffset + calendar.weekCount * step;
+  const endAngle = angleOffset + direction * (TAU - YEAR_GAP);
+  const weekdays = sundayStart ? [WEEKDAYS.at(-1), ...WEEKDAYS.slice(0, -1)] : WEEKDAYS;
+  const weekNumbers = calendar.weeks.map(([first]) => displayWeekNumber(first.date, sundayStart));
+  const guideWeeks = [weekNumbers.indexOf(1), weekNumbers.indexOf(27)];
+  const step = direction * (TAU - YEAR_GAP - guideWeeks.length * WEEKDAY_GUIDE_ANGLE) / calendar.weekCount;
+  let nextAngle = angleOffset;
+  const weekAngles = weekNumbers.map((_, index) => {
+    const guideStart = guideWeeks.includes(index) ? nextAngle : null;
+    const start = guideStart === null ? nextAngle : guideStart + direction * WEEKDAY_GUIDE_ANGLE;
+    const end = start + step;
+    nextAngle = end;
+    return { guideStart, start, end, middle: (start + end) / 2 };
+  });
   const arrowRadius = INNER + TRACK * 7 + 12;
-  const arrowStart = angleOffset + step / 2;
+  const arrowStart = weekAngles[0].middle;
   const arrowEnd = arrowStart + direction * 7 * Math.PI / 180;
   const eventsByDate = useMemo(() => allDayEventsByDate(allDayEvents, calendar.year), [allDayEvents, calendar.year]);
   const eventSpans = useMemo(() => allDayEventSpans(calendar.weeks, eventsByDate), [calendar.weeks, eventsByDate]);
   const eventLayouts = eventSpans.map(span => {
-    const week = span.cells[0].week, start = angleOffset + week * step;
+    const week = span.cells[0].week;
+    const { start, end } = weekAngles[week];
     const rings = span.cells.map(cell => weekdayTrack(cell.track, week, calendar.weekCount, counterclockwise, januaryAtBottom));
     const inner = INNER + Math.min(...rings) * TRACK, outer = INNER + (Math.max(...rings) + 1) * TRACK;
     const outward = weekdayTrack(0, week, calendar.weekCount, counterclockwise, januaryAtBottom) < weekdayTrack(6, week, calendar.weekCount, counterclockwise, januaryAtBottom);
-    return { ...span, rings, inner, outer, box: radialEventBox(inner, outer, start, start + step, outward) };
+    return { ...span, rings, inner, outer, box: radialEventBox(inner, outer, start, end, outward) };
   });
   const eventPositions = new Map(eventLayouts.flatMap(({ cells, rings, box }) => cells.map((cell, index) =>
     [cell.key, radialEventDatePosition(box, INNER + (rings[index] + .5) * TRACK)])));
 
   function navigate(event, date) {
-    const offsets = { ArrowRight: 1, ArrowLeft: -1, ArrowUp: 7, ArrowDown: -7, Home: -((date.getUTCDay() + 6) % 7), End: 6 - ((date.getUTCDay() + 6) % 7) };
+    const dayIndex = weekDayIndex(date, sundayStart);
+    const offsets = { ArrowRight: 1, ArrowLeft: -1, ArrowUp: 7, ArrowDown: -7, Home: -dayIndex, End: 6 - dayIndex };
     if (!(event.key in offsets)) return;
     event.preventDefault();
     const next = addDays(date, offsets[event.key]);
@@ -102,14 +116,14 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
     <div className="calendar-canvas">
     <svg className="calendar" viewBox="-55 15 1010 870" aria-labelledby="calendar-title calendar-description">
       <title id="calendar-title">{calendar.year} orbital calendar</title>
-      <desc id="calendar-description">The year moves {counterclockwise ? 'counterclockwise' : 'clockwise'} from January at the {januaryAtBottom ? 'bottom' : 'top'}. Each spoke reads Monday through Sunday from left to right: Monday is innermost on the right half and outermost on the left half. Each spoke is one week, with its ISO week number just inside the inner ring. Select a date to explore. Right arrow selects the next day; left arrow selects the previous day. Up arrow selects the same weekday seven days later; down arrow selects the same weekday seven days earlier.</desc>
+      <desc id="calendar-description">The year moves {counterclockwise ? 'counterclockwise' : 'clockwise'} from January at the {januaryAtBottom ? 'bottom' : 'top'}. Each spoke reads {sundayStart ? 'Sunday through Saturday' : 'Monday through Sunday'} from left to right. Each spoke is one week, with its week number just inside the inner ring. Weekday initials mark the tracks at weeks 1 and 27. Select a date to explore. Right arrow selects the next day; left arrow selects the previous day. Up arrow selects the same weekday seven days later; down arrow selects the same weekday seven days earlier.</desc>
       <defs>
         <marker id={timeArrowId} markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 9 8">
           <path className="time-direction-arrowhead" d="M 1 1 L 8 4 L 1 7" />
         </marker>
       </defs>
       {calendar.weeks.flat().map(({ date, key, track, week, inYear }) => {
-        const start = angleOffset + week * step, end = start + step;
+        const { start, end } = weekAngles[week];
         const radialTrack = weekdayTrack(track, week, calendar.weekCount, counterclockwise, januaryAtBottom);
         const isSelected = key === selectedKey;
         const isToday = key === todayKey;
@@ -134,23 +148,23 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         {[INNER, INNER + TRACK * 7].map(radius => <path key={radius} className="calendar-rim"
           d={`M ${point(radius, angleOffset)} A ${radius} ${radius} 0 1 ${direction > 0 ? 1 : 0} ${point(radius, endAngle)}`} />)}
         <g className="weekday-grid-dividers">
-          {calendar.weeks.flatMap((cells, week) => [1, 2, 4].map(day => {
+          {calendar.weeks.flatMap((cells, week) => (sundayStart ? [0, 2, 3, 5] : [1, 2, 4]).map(day => {
             if (!cells[day].inYear || !cells[day + 1].inYear) return null;
             const before = weekdayTrack(day, week, calendar.weekCount, counterclockwise, januaryAtBottom);
             const after = weekdayTrack(day + 1, week, calendar.weekCount, counterclockwise, januaryAtBottom);
             const radius = INNER + (Math.min(before, after) + 1) * TRACK;
-            const start = angleOffset + week * step, end = start + step;
-            return <path key={`${week}-${day}`} className={`weekday-grid-divider${day === 4 ? ' is-weekend' : ''}`}
+            const { start, end } = weekAngles[week];
+            return <path key={`${week}-${day}`} className={`weekday-grid-divider${(sundayStart ? day === 0 || day === 5 : day === 4) ? ' is-weekend' : ''}`}
               data-before={cells[day].key} data-after={cells[day + 1].key}
               d={`M ${point(radius, start)} A ${radius} ${radius} 0 0 ${step > 0 ? 1 : 0} ${point(radius, end)}`} />;
           }))}
         </g>
-        {Array.from({ length: 12 }, (_, month) => <path key={month} className="month-outline" d={monthOutline(calendar.weeks, month, step, counterclockwise, januaryAtBottom, angleOffset)} />)}
+        {Array.from({ length: 12 }, (_, month) => <path key={month} className="month-outline" d={monthOutline(calendar.weeks, month, weekAngles, counterclockwise, januaryAtBottom)} />)}
         <g className="active-week-outline">
           {calendar.weeks.find(week => +week[0].date === selectedWeek)?.filter(cell => cell.inYear).map(cell => {
             const ring = weekdayTrack(cell.track, cell.week, calendar.weekCount, counterclockwise, januaryAtBottom);
-            const start = angleOffset + cell.week * step;
-            return <path key={cell.key} d={arcCell(INNER + ring * TRACK, INNER + (ring + 1) * TRACK, start, start + step)} />;
+            const { start, end } = weekAngles[cell.week];
+            return <path key={cell.key} d={arcCell(INNER + ring * TRACK, INNER + (ring + 1) * TRACK, start, end)} />;
           })}
         </g>
       </g>
@@ -181,7 +195,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       })}
       {calendar.weeks.flat().filter(cell => cell.inYear).map(({ date, key, track, week }) => {
         const ring = weekdayTrack(track, week, calendar.weekCount, counterclockwise, januaryAtBottom);
-        const [x, y] = point(INNER + TRACK * (ring + .5), angleOffset + (week + .5) * step);
+        const [x, y] = point(INNER + TRACK * (ring + .5), weekAngles[week].middle);
         const dayEvents = eventsByDate.get(key), isSelected = key === selectedKey;
         const position = eventPositions.get(key);
         const numberX = position?.x ?? x, numberY = position?.y ?? y;
@@ -198,9 +212,9 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       {Array.from({ length: 12 }, (_, month) => {
         const cells = calendar.weeks.flat().filter(cell => cell.inYear && cell.date.getUTCMonth() === month);
         const first = cells[0], last = cells.at(-1);
-        const a = (first.week + first.track / 7) * step;
-        const b = (last.week + (last.track + 1) / 7) * step;
-        const angle = angleOffset + (a + b) / 2;
+        const a = weekAngles[first.week].start + first.track / 7 * step;
+        const b = weekAngles[last.week].start + (last.track + 1) / 7 * step;
+        const angle = (a + b) / 2;
         const side = Math.sin(angle);
         const [x, y] = point(415, angle);
         const anchor = side < -.4 ? 'end' : side > .4 ? 'start' : 'middle';
@@ -209,8 +223,8 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
         </g>;
       })}
       {calendar.weeks.map((week, index) => {
-        const [x, y] = point(INNER - 11, angleOffset + (index + .5) * step);
-        const number = isoWeek(week[0].date);
+        const [x, y] = point(INNER - 11, weekAngles[index].middle);
+        const number = weekNumbers[index];
         return <text key={week[0].key} x={x} y={y} dy=".35em"
           className={`orbit-week-number${+week[0].date === selectedWeek ? ' is-selected' : ''}`}
           aria-label={`Week ${number}`}>
@@ -221,7 +235,7 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
       {seasons.map(season => {
         const cell = calendar.weeks.flat().find(day => day.key === season.key);
         if (!cell) return null;
-        const angle = angleOffset + (cell.week + .5) * step;
+        const angle = weekAngles[cell.week].middle;
         const [x, y] = point(130, angle);
         const [tickX, tickY] = point(149, angle);
         const [edgeX, edgeY] = point(154, angle);
@@ -236,10 +250,27 @@ export default function OrbitCalendar({ calendar, seasons, selected, today, onSe
           <text x={x} y={y + 10} className="season-kind">{season.kind.toUpperCase()}</text>
         </g>;
       })}
+      <g className="orbit-weekday-guides" aria-hidden="true">
+        {guideWeeks.map(week => {
+          const { guideStart, start } = weekAngles[week];
+          const guideAngle = (guideStart + start) / 2;
+          return <g key={week} className="orbit-weekday-guide" data-week={weekNumbers[week]}>
+            {weekdays.map((day, track) => {
+              const ring = weekdayTrack(track, week, calendar.weekCount, counterclockwise, januaryAtBottom);
+              const inner = INNER + ring * TRACK;
+              const [x, y] = point(inner + TRACK / 2, guideAngle);
+              return <g key={day}>
+                <path d={arcCell(inner, inner + TRACK, guideStart, start)} />
+                <text x={x} y={y} dy=".35em">{day[0]}</text>
+              </g>;
+            })}
+          </g>;
+        })}
+      </g>
       <Sun />
       <g aria-live="polite" aria-atomic="true">
         <text x="450" y="507" className="center-caption">{formatDate(selected, { weekday: 'long', month: 'long', day: 'numeric' })}</text>
-        <text x="450" y="533" className="center-progress">Day {dayOfYear(selected)} of {calendar.dayCount} · Week {isoWeek(selected)}</text>
+        <text x="450" y="533" className="center-progress">Day {dayOfYear(selected)} of {calendar.dayCount} · Week {displayWeekNumber(selected, sundayStart)}</text>
       </g>
     </svg>
         <YearNavigation selected={selected} onSelect={onSelect} inRing />

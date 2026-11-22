@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { calendarYear, changeYear, civilDate, dateKey, dayOfYear, isoWeek, point, weekday, weekdayTrack } from '../src/calendar.js';
+import { calendarYear, changeYear, civilDate, dateKey, dayOfYear, displayWeekNumber, isoWeek, point, startOfWeek, weekday, weekdayTrack } from '../src/calendar.js';
 
 test('every civil date appears once, on its weekday track, for a full Gregorian cycle', () => {
   for (let year = 2000; year < 2400; year++) {
@@ -16,6 +16,18 @@ test('every civil date appears once, on its weekday track, for a full Gregorian 
       assert.equal(weekday(week[6].date), 6);
     }
   }
+});
+
+test('Sunday-start weeks align ring cells and week numbers across the new year', () => {
+  const sunday = civilDate(2024, 11, 29);
+  const saturday = civilDate(2025, 0, 4);
+  const firstWeek = calendarYear(2025, true).weeks[0];
+  assert.deepEqual(firstWeek.map(cell => cell.inYear), [false, false, false, true, true, true, true]);
+  assert.equal(firstWeek[0].key, dateKey(sunday));
+  assert.equal(firstWeek[6].key, dateKey(saturday));
+  assert.equal(dateKey(startOfWeek(saturday, true)), dateKey(sunday));
+  assert.equal(isoWeek(sunday), 52);
+  for (const { date } of firstWeek) assert.equal(displayWeekNumber(date, true), 1);
 });
 
 test('partial weeks preserve empty cells at year boundaries', () => {

@@ -13,17 +13,22 @@ import CalendarSection from './components/CalendarSection.jsx';
 import YearNavigation from './components/YearNavigation.jsx';
 import SelectedDayPanel from './components/SelectedDayPanel.jsx';
 
+const WEEK_START_KEY = 'orbit.week-start.v1';
+
 export default function App() {
   const today = localToday();
   const [selected, setSelected] = useState(today);
   const [januaryAtBottom, setJanuaryAtBottom] = useState(false);
+  const [sundayStart, setSundayStart] = useState(() => {
+    try { return localStorage.getItem(WEEK_START_KEY) === 'sunday'; } catch { return false; }
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [ringEditor, setRingEditor] = useState(null);
   const [newEventDay, setNewEventDay] = useState(null);
   const [ringNotice, setRingNotice] = useState('');
-  const google = useGoogleCalendar(selected);
+  const google = useGoogleCalendar(selected, sundayStart);
   const year = selected.getUTCFullYear();
-  const calendar = useMemo(() => calendarYear(year), [year]);
+  const calendar = useMemo(() => calendarYear(year, sundayStart), [year, sundayStart]);
   const seasons = useMemo(() => seasonEvents(year), [year]);
   const timelineRef = useRef(null);
   const nearbyYears = Array.from({ length: 11 }, (_, index) => year + index - 5);
@@ -40,6 +45,11 @@ export default function App() {
     observer.observe(timeline);
     return () => observer.disconnect();
   }, [year]);
+  function changeWeekStart(value) {
+    setSundayStart(value);
+    try { localStorage.setItem(WEEK_START_KEY, value ? 'sunday' : 'monday'); } catch { /* Keep the in-memory preference. */ }
+  }
+
   return <div className="app-shell">
     <header className="app-header">
       <div className="brand"><OrbitMark /><span className="brand-name">Orbit Weeks</span></div>
@@ -58,19 +68,19 @@ export default function App() {
     </header>
     <main className="calendar-workspace">
       {ringNotice && <p className="schedule-notice" role="status">{ringNotice}</p>}
-      <ScheduleViews selected={selected} onSelect={setSelected} google={google} onSettings={() => setSettingsOpen(true)} />
+      <ScheduleViews sundayStart={sundayStart} selected={selected} onSelect={setSelected} google={google} onSettings={() => setSettingsOpen(true)} />
       <CalendarSection title="Year" className="year-calendar-section" headerContent={<YearNavigation selected={selected} onSelect={setSelected} />}>
         <div className="year-calendar-layout">
-          <OrbitCalendar calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} januaryAtBottom={januaryAtBottom} onToggleJanuaryPosition={() => setJanuaryAtBottom(value => !value)}
+          <OrbitCalendar sundayStart={sundayStart} calendar={calendar} seasons={seasons} selected={selected} today={today} onSelect={setSelected} januaryAtBottom={januaryAtBottom} onToggleJanuaryPosition={() => setJanuaryAtBottom(value => !value)}
             allDayEvents={google.yearEvents} onDayEvents={(day, events) => { setRingNotice(''); setRingEditor({ day, events, event: events.length === 1 ? events[0] : null }); }} />
-          <SelectedDayPanel selected={selected} seasons={seasons} google={google} onSettings={() => setSettingsOpen(true)}
+          <SelectedDayPanel sundayStart={sundayStart} selected={selected} seasons={seasons} google={google} onSettings={() => setSettingsOpen(true)}
             onEvent={event => { setRingNotice(''); setRingEditor({ day: selected, events: [event], event }); }} />
         </div>
         {google.loadingYearEvents && <p className="ring-event-status schedule-muted" role="status">Loading all-day events for {year}…</p>}
         {google.yearEventErrors.map(message => <p key={message} className="ring-event-status schedule-error" role="alert">Ring events · {message} <button className="schedule-text-button" onClick={google.refresh}>Retry</button></p>)}
       </CalendarSection>
     </main>
-    {settingsOpen && <CalendarSettings google={google} onClose={() => setSettingsOpen(false)} />}
+    {settingsOpen && <CalendarSettings sundayStart={sundayStart} onWeekStartChange={changeWeekStart} google={google} onClose={() => setSettingsOpen(false)} />}
     {newEventDay && google.connected && <EventEditor selected={newEventDay} calendars={google.calendars} selectedIds={google.selectedIds}
       onWrite={google.writeEvent} onClose={message => { setNewEventDay(null); if (message) setRingNotice(message); }} />}
     {ringEditor && google.connected && (ringEditor.event ? <EventEditor selected={ringEditor.day} calendars={google.calendars} selectedIds={google.selectedIds} event={ringEditor.event}
